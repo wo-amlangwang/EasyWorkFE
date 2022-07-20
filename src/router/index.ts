@@ -24,6 +24,23 @@ const router = createRouter({
       path: "/workbench",
       name: "workbench",
       component: () => import("../views/Workbench.vue"),
+    },
+    {
+      path: "/password_reset",
+      name: "password_reset",
+      component: () => import("../views/PasswordReset/Home.vue"),
+      children: [
+        {
+          path: "email",
+          name: "password_reset_email",
+          component: () => import("../views/PasswordReset/Email.vue"),
+        },
+        {
+          path: "set_password",
+          name: "password_reset_set_password",
+          component: () => import("../views/PasswordReset/SetPassword.vue"),
+        }
+      ]
     }
   ],
 });

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-let EasyWorkAPI = {
+const EasyWorkAPI = {
     /**
      * 用户注册
      * 
