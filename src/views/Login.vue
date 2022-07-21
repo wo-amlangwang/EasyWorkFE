@@ -16,9 +16,10 @@
 
 <script setup lang="ts">
 import EasyWorkAPI from "../utils/EasyWorkAPI";
-import router from "@/router";
 import { ElMessageBox } from 'element-plus'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 const name = ref(''), password = ref(''), veify = ref(''),
         loading = ref(false);
