@@ -23,7 +23,7 @@ const router = createRouter({
     {
       path: "/workbench",
       name: "workbench",
-      component: () => import("../views/Workbench.vue"),
+      component: () => import("../views/Workbench/Workbench.vue"),
     },
     {
       path: "/password_reset",
