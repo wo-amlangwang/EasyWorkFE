@@ -26,16 +26,11 @@ const isActive = computed(() => unref(canDrop) && unref(isOver))
 </script>
 
 <template>
-  <div
-    :ref="drop"
-    role="Box"
-    class="box"
-    :id="`box-${key}`"
-  >
+  <div :ref="drop" role="Box" class="box" :id="`box-${key}`">
     {{
-      isActive
-        ? 'Release to drop'
-        : `This dustbin accepts: ${accept.join(', ')}`
+        isActive
+          ? 'Release to drop'
+          : `This dustbin accepts: ${accept.join(', ')}`
     }}
 
     <p v-if="lastDroppedItem">
@@ -46,12 +41,12 @@ const isActive = computed(() => unref(canDrop) && unref(isOver))
 
 <style>
 .box {
-    overflow: hidden;
-    clear: both;
-    /* 红色边框 */
-    border: 1px solid red;
-    width: 300px;
-    height: 300px;
-    margin: 24px;
+  overflow: hidden;
+  clear: both;
+  /* 红色边框 */
+  border: 1px solid red;
+  width: 300px;
+  height: 300px;
+  margin: 24px;
 }
 </style>

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { useDrag, useDrop } from 'vue3-dnd'
 import { computed, unref } from 'vue'
-import Item from './Item.vue'
-import Box from './Box.vue'
+import Item from '../../components/Item.vue'
+import Box from '../../components/Box.vue'
 import { ref } from 'vue'
 
 const droppedBoxNames = ref<string[]>([])
