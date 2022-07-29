@@ -1,55 +1,52 @@
 <template>
-    <el-row>
-        <el-col :span="4">
-            <div>
-                <img src="">
-            </div>
-            <el-menu class="el-menu-vertical" :collapse="isCollapse" @open="handleOpen" @close="handleClose"
-                @select="handleSelect">
-                <el-button @click="isCollapse = !isCollapse" text
-                    style="width:100%; padding-top: 20px; padding-bottom: 20px;">
-                    <el-icon :size="20">
-                        <svg v-if="isCollapse" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"
-                            data-v-78e17ca8="">
-                            <path fill="currentColor"
-                                d="M338.752 104.704a64 64 0 0 0 0 90.496l316.8 316.8-316.8 316.8a64 64 0 0 0 90.496 90.496l362.048-362.048a64 64 0 0 0 0-90.496L429.248 104.704a64 64 0 0 0-90.496 0z">
-                            </path>
-                        </svg>
-                        <svg v-if="!isCollapse" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"
-                            data-v-78e17ca8="">
-                            <path fill="currentColor"
-                                d="M685.248 104.704a64 64 0 0 1 0 90.496L368.448 512l316.8 316.8a64 64 0 0 1-90.496 90.496L232.704 557.248a64 64 0 0 1 0-90.496l362.048-362.048a64 64 0 0 1 90.496 0z">
-                            </path>
-                        </svg>
-                    </el-icon>
-                </el-button>
-                <el-menu-item v-for="(item, index) in projeckList" :key="index" :index="item.id">
-                    <el-icon :size="20">
-                        <Notebook />
-                    </el-icon>
-                    <template #title>{{ item.title }}</template>
-                </el-menu-item>
-                <el-menu-item :index="`newProjeck`">
-                    <el-icon :size="20">
-                        <Plus />
-                    </el-icon>
-                    <template #title>新建</template>
-                </el-menu-item>
-            </el-menu>
-        </el-col>
-        <el-col :span="20">
-            <TaskBoard :projeckId="projeckId" />
-        </el-col>
-    </el-row>
+    <div class="common-layout">
+        <el-container>
+            <el-container>
+                <el-aside>
+                    <el-menu class="el-menu-vertical" :collapse="isCollapse" @open="handleOpen" @close="handleClose"
+                        @select="handleSelect">
+                        <el-menu-item v-for="(item, index) in projeckList" :key="index" :index="item.id">
+                            <el-icon :size="20">
+                                <Notebook />
+                            </el-icon>
+                            <template #title>{{ item.title }}</template>
+                        </el-menu-item>
+
+                        <div class="btn-control">
+
+                            <el-button :index="`newProjeck`" text
+                                style="flex: 1; padding-top: 20px; padding-bottom: 20px; margin-left: 0;">
+                                <el-icon :size="20">
+                                    <Plus />
+                                </el-icon>
+                            </el-button>
+                            <el-button @click="isCollapse = !isCollapse" text
+                                style="flex: 1; padding-top: 20px; padding-bottom: 20px; margin-left: 0;">
+                                <el-icon :size="20">
+                                    <DArrowRight v-if="isCollapse" />
+                                    <DArrowLeft v-if="!isCollapse" />
+                                </el-icon>
+                            </el-button>
+                        </div>
+
+                    </el-menu>
+                </el-aside>
+                <el-main>
+                    <DndProvider :backend="HTML5Backend">
+                        <TaskBoard :projeckId="projeckId" />
+                    </DndProvider>
+                </el-main>
+            </el-container>
+        </el-container>
+    </div>
 </template>
 
 <script lang="ts" setup>
+import { HTML5Backend } from 'react-dnd-html5-backend'
+import { DndProvider } from 'vue3-dnd'
 import { ref } from 'vue'
-import {
-    Plus,
-    Notebook,
-} from '@element-plus/icons-vue'
-import TaskBoard from '@/components/TaskBoard.vue'
+import { Plus, Notebook, DArrowRight, DArrowLeft } from '@element-plus/icons-vue'
+import TaskBoard from '@/views/Workbench/TaskBoard.vue'
 
 const projeckId = ref()
 const isCollapse = ref(false)
@@ -91,12 +88,41 @@ const handleClose = (key: string, keyPath: string[]) => {
 </script>
 
 <style>
+.btn-control {
+    
+}
+
+.el-container,
+.el-aside,
+.common-layout {
+    height: 100%;
+}
+
 .el-menu-vertical {
-    height: 100vh;
+    height: 100%;
+}
+
+.el-menu-vertical button {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.el-menu-vertical:not(.el-menu--collapse) button {
+    width: 50%;
+    margin: 0 auto;
+    transition: border-color var(--el-transition-duration), background-color var(--el-transition-duration), color var(--el-transition-duration);
 }
 
 .el-menu-vertical:not(.el-menu--collapse) {
-    width: 200px;
+    width: 240px;
     min-height: 400px;
+}
+
+.el-row {
+    height: 100%;
+}
+
+.el-aside {
+    width: var(--el-aside-width, auto);
 }
 </style>

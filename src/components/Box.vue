@@ -10,8 +10,6 @@ const props = defineProps<{
   key: number
 }>()
 
-console.log(props)
-
 const [collect, drop] = useDrop({
   accept: props.accept,
   drop: props.onDrop,
@@ -27,7 +25,8 @@ const isActive = computed(() => unref(canDrop) && unref(isOver))
 
 <template>
   <div :ref="drop" role="Box" class="box" :id="`box-${key}`">
-    {{
+    <slot></slot>
+    <!-- {{
         isActive
           ? 'Release to drop'
           : `This dustbin accepts: ${accept.join(', ')}`
@@ -35,18 +34,18 @@ const isActive = computed(() => unref(canDrop) && unref(isOver))
 
     <p v-if="lastDroppedItem">
       Last dropped: {{ JSON.stringify(lastDroppedItem) }}
-    </p>
+    </p> -->
   </div>
 </template>
 
 <style>
 .box {
   overflow: hidden;
-  clear: both;
-  /* 红色边框 */
-  border: 1px solid red;
-  width: 300px;
-  height: 300px;
-  margin: 24px;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  background-color: #F5F5F5;
 }
 </style>
