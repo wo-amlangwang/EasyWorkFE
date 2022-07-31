@@ -50,19 +50,32 @@
             <div>
                 <div>
                     用户名:
-                    <img src="" />
+                    <el-input v-model="userInfo_Name" placeholder="Please input" />
                 </div>
                 <div>
                     邮箱:
-                    <img src="" />
+                    <el-input v-model="userInfo_email" placeholder="Please input" />
                 </div>
                 <div>
                     头像:
-                    <img src="" />
+                    <el-upload class="avatar-uploader" action="" accept=".jpg, .png" :show-file-list="false"
+                        :on-change="getFile" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload"
+                        :auto-upload="false">
+                        <el-avatar shape="square" class="user-avatar" :size="32"
+                            :fit="'fill'"  v-if="userInfo_avatar" :src="userInfo_avatar"/>
+                        <el-icon v-else class="avatar-uploader-icon">
+                            <Plus />
+                        </el-icon>
+                    </el-upload>
                 </div>
                 <div>
-                    头像:
-                    <img src="" />
+                    密码:
+                    <el-input type="password" show-password v-model="userInfo_passwd" placeholder="Please input" />
+                </div>
+                <div>
+                    确认密码:
+                    <el-input type="password" show-password v-model="userInfo_confirmPasswd"
+                        placeholder="Please input" />
                 </div>
             </div>
             <template #footer>
@@ -81,10 +94,19 @@ import { DndProvider } from 'vue3-dnd'
 import { ref } from 'vue'
 import { Plus, Notebook, DArrowRight, DArrowLeft } from '@element-plus/icons-vue'
 import TaskBoard from '@/views/Workbench/TaskBoard.vue'
+import { ElMessage } from 'element-plus'
+import type { UploadProps, UploadFile, UploadFiles } from 'element-plus'
 
+const imageUrl = ref('')
 const projeckId = ref()
 const isCollapse = ref(false)
 const dialogUser = ref(false)
+const userInfo_Name = ref(''),
+    userInfo_email = ref(''),
+    userInfo_avatar = ref(''),
+    userInfo_passwd = ref(''),
+    userInfo_confirmPasswd = ref('');
+
 let projeckList = [
     {
         icon: 'el-icon-plus',
@@ -119,6 +141,54 @@ const handleOpen = (key: string, keyPath: string[]) => {
 }
 const handleClose = (key: string, keyPath: string[]) => {
     console.log(key, keyPath)
+}
+
+const handleAvatarSuccess: UploadProps['onSuccess'] = (
+    response,
+    uploadFile
+) => {
+    console.log(response)
+    console.log(uploadFile)
+    imageUrl.value = URL.createObjectURL(uploadFile.raw!)
+}
+
+const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
+
+    getBase64(rawFile).then(res => {
+        console.log(res)
+    });
+    if (rawFile.type !== 'image/jpeg') {
+        ElMessage.error('Avatar picture must be JPG format!')
+        return false
+    } else if (rawFile.size / 1024 / 1024 > 2) {
+        ElMessage.error('Avatar picture size can not exceed 2MB!')
+        return false
+    }
+    return true
+}
+
+const getFile = function (uploadFile: UploadFile, uploadFiles: UploadFiles) {
+    getBase64(uploadFile.raw!).then(res => {
+        console.log(res)
+        userInfo_avatar.value = res
+    });
+}
+
+const getBase64 = function (file: any): Promise<string>  {
+    return new Promise(function (resolve, reject) {
+        let reader = new FileReader();
+        let imgResult = "";
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+            imgResult = reader.result ? reader.result.toString() : "";
+        };
+        reader.onerror = function (error) {
+            reject(error);
+        };
+        reader.onloadend = function () {
+            resolve(imgResult);
+        };
+    });
 }
 </script>
 
