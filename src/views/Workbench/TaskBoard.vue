@@ -20,7 +20,7 @@
             </h3>
             <Box :key="index" :accept="item.access" :onDrop="item.handle">
                 <Item v-for="(task, idx) in item.task" :key="idx" :id="task.id" :title="task.title"
-                    :person="task.person">
+                    :person="task.person" @click="itemClick(task.id)">
                 </Item>
             </Box>
         </div>
@@ -31,17 +31,120 @@
             </el-icon>
         </div>
     </div>
+
+    <!-- 事项详情 -->
+    <el-drawer v-model="drawerTask" :title="'#' + taskInfo?.id" :size="'45%'" :direction="'rtl'" :before-close="handleClose">
+        <div class="task-detail">
+            <div class="task-detail-title">
+                <h3 style="padding-left: 0;">{{ taskInfo ? taskInfo.title : '任务标题' }}</h3>
+            </div>
+            <div class="task-detail-person">
+                <h4>责任人:</h4>
+                <Tags :tags="taskInfo ? taskInfo.person : []" :addTag="addTag" style="margin-left: 5px;" />
+            </div>
+            <div class="task-detail-content">
+                <h4>事项内容:</h4>
+                <el-input type="textarea" :resize="'none'" :rows="10" v-model="content" placeholder="请输入事项内容" />
+            </div>
+            <div class="task-detail-time">
+                <h4>事项时间:</h4>
+                <div class="demo-date-picker">
+                    <div class="block">
+                        <el-date-picker v-model="time" type="daterange" range-separator=""
+                            start-placeholder="Start date" end-placeholder="End date" :size="'default'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <el-button class="btn task-save">
+            保存
+        </el-button>
+    </el-drawer>
+
 </template>
 <script setup lang="ts">
 import lodash from 'lodash';
 import { watch, ref, type Ref } from 'vue';
-import Item from './Item.vue'
+import Item from '../../components/Item.vue'
 import Box from '../../components/Box.vue'
+import Tags from '../../components/Tags.vue'
 import { Plus, Edit } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
 
 const props = defineProps<{ projeckId: Ref }>()
-
+const drawerTask = ref(false)
 const droppedBoxNames = ref<string[]>([])
+
+interface tag {
+    id: number
+    name: string
+}
+
+interface ListItem {
+    value: string
+    label: string
+}
+interface TaskInfo {
+    title: string
+    person: tag[]
+    content: string
+    time: string
+    id: string
+    status: number
+}
+
+const list = ref<ListItem[]>([])
+const persons = ref<ListItem[]>([])
+const value = ref<string[]>([])
+const loading = ref(false)
+const taskInfo = ref<TaskInfo>()
+
+taskInfo.value = {
+    title: '开发用户管理后端',
+    person: [{
+        id: 1,
+        name: '张三'
+    }, {
+        id: 2,
+        name: '李四'
+    }, {
+        id: 3,
+        name: '王五'
+    }],
+    content: '',
+    time: '',
+    id: 15,
+    status: 0
+}
+
+const addTag = () => {
+    console.log(123);
+    ElMessageBox.prompt('请输入用户名/ID', '添加责任人', {
+        inputPattern: /^[a-zA-Z0-9\u4e00-\u9fa5]{1,10}$/,
+        inputErrorMessage: '用户名/ID只能为1-10位中文、英文、数字'
+    }).then(({ value }) => {
+        if (value) {
+            taskInfo.value?.person.push({
+                id: taskInfo.value?.person.length + 1,
+                name: value
+            })
+        }
+    })
+}
+
+const remoteMethod = (query: string) => {
+    if (query) {
+        loading.value = true
+        setTimeout(() => {
+            loading.value = false
+            persons.value = list.value.filter((item) => {
+                return item.label.toLowerCase().includes(query.toLowerCase())
+            })
+        }, 200)
+    } else {
+        persons.value = []
+    }
+}
 
 const handleDrop = (item: any, monitor: any) => {
     console.log(item, monitor)
@@ -53,6 +156,26 @@ const handleDrop = (item: any, monitor: any) => {
     // droppedBoxNames.value.push(name)
     // console.log(name)
     // this.appendChild(document.getElementById('item-' + name))
+}
+
+
+
+const title = ref(''), content = ref(''), person = ref(''), time = ref('')
+
+const handleClose = (done: () => void) => {
+    ElMessageBox.confirm('Are you sure you want to close this?')
+        .then(() => {
+            done()
+        })
+        .catch(() => {
+            // catch error
+        })
+}
+
+const itemClick = (id: number) => {
+    console.log(id)
+    title.value = '事项详情' + id
+    drawerTask.value = true
 }
 
 const addList = () => {
@@ -146,6 +269,10 @@ h3 {
     padding: 5px;
 }
 
+.el-drawer__header {
+    margin-bottom: 0;
+}
+
 .task-list {
     display: flex;
     flex-direction: column;
@@ -168,8 +295,37 @@ h3 {
     background-color: #eee;
 }
 
-/* 鼠标进入 */
 .task-list.list-add:hover {
     cursor: pointer;
 }
+
+.task-detail {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.task-detail>* {
+    padding-bottom: 10px;
+}
+
+.btn.task-save{
+    position: absolute;
+    right: 30px;
+    bottom: 10px;
+}
+.task-detail .task-detail-title {}
+
+.task-detail .task-detail-person {
+    display: flex;
+
+}
+
+.task-detail .task-detail-content {}
+
+
+
+.task-detail .task-detail-time {}
+
+.task-detail .task-detail-btn {}
 </style>
