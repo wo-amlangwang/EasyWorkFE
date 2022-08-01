@@ -33,7 +33,8 @@
     </div>
 
     <!-- 事项详情 -->
-    <el-drawer v-model="drawerTask" :title="'#' + taskInfo?.id" :size="'45%'" :direction="'rtl'" :before-close="handleClose">
+    <el-drawer v-model="drawerTask" :title="'#' + taskInfo?.id" :size="'45%'" :direction="'rtl'"
+        :before-close="handleClose" style="max-width: 35vw;">
         <div class="task-detail">
             <div class="task-detail-title">
                 <h3 style="padding-left: 0;">{{ taskInfo ? taskInfo.title : '任务标题' }}</h3>
@@ -55,10 +56,40 @@
                     </div>
                 </div>
             </div>
+            <el-timeline class="task-timeline">
+                <el-timeline-item v-for="(item, key) in taskTimeLine" :timestamp="item.time" placement="top">
+                    <el-card>
+                        {{ item.content}}
+                    </el-card>
+                </el-timeline-item>
+                <!-- <el-timeline-item timestamp="2018/4/12" placement="top">
+                    <el-card>
+                        <h4>Update Github template</h4>
+                        <p>Tom committed 2018/4/12 20:46</p>
+                    </el-card>
+                </el-timeline-item>
+                <el-timeline-item timestamp="2018/4/3" placement="top">
+                    <el-card>
+                        <h4>Update Github template</h4>
+                        <p>Tom committed 2018/4/3 20:46</p>
+                    </el-card>
+                </el-timeline-item>
+                <el-timeline-item timestamp="2018/4/2" placement="top">
+                    <el-card>
+                        <h4>Update Github template</h4>
+                        <p>Tom committed 2018/4/2 20:46</p>
+                    </el-card>
+                </el-timeline-item> -->
+            </el-timeline>
+            <div class="task-detail-content">
+                <h4>评论</h4>
+                <el-input type="textarea" :resize="'none'" :rows="10" v-model="content" placeholder="请输入评论内容" />
+                <el-button class="btn task-save">
+                    发送
+                </el-button>
+            </div>
         </div>
-        <el-button class="btn task-save">
-            保存
-        </el-button>
+
     </el-drawer>
 
 </template>
@@ -89,8 +120,13 @@ interface TaskInfo {
     person: tag[]
     content: string
     time: string
-    id: string
+    id: number
     status: number
+}
+interface TaskTimeLine {
+    type: number
+    time: string
+    content: string
 }
 
 const list = ref<ListItem[]>([])
@@ -98,6 +134,7 @@ const persons = ref<ListItem[]>([])
 const value = ref<string[]>([])
 const loading = ref(false)
 const taskInfo = ref<TaskInfo>()
+const taskTimeLine = ref<TaskTimeLine[]>([])
 
 taskInfo.value = {
     title: '开发用户管理后端',
@@ -116,6 +153,19 @@ taskInfo.value = {
     id: 15,
     status: 0
 }
+
+taskTimeLine.value = [
+    {
+        type: 1,
+        time: "2018/4/12 20:46",
+        content: "张三 创建了任务"
+    },
+    {
+        type: 2,
+        time: "2018/4/12 20:46",
+        content: "李四: 该需求需要进一步评估"
+    }
+]
 
 const addTag = () => {
     console.log(123);
@@ -260,6 +310,10 @@ watch(
 
 </script>
 <style>
+.el-timeline {
+    padding-left: 0;
+}
+
 .task-box {
     display: flex;
     height: 100%;
@@ -309,23 +363,19 @@ h3 {
     padding-bottom: 10px;
 }
 
-.btn.task-save{
-    position: absolute;
-    right: 30px;
-    bottom: 10px;
+.btn.task-save {
+    /* position: relative; */
+    margin-top: 10px;
+    float: right;
 }
-.task-detail .task-detail-title {}
+
+.task-detail .task-timeline {
+    max-height: 35vh;
+    overflow: auto;
+}
 
 .task-detail .task-detail-person {
     display: flex;
 
 }
-
-.task-detail .task-detail-content {}
-
-
-
-.task-detail .task-detail-time {}
-
-.task-detail .task-detail-btn {}
 </style>
