@@ -15,12 +15,19 @@
 </template>
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import EasyWorkAPI from "../utils/EasyWorkAPI";
+
 const router = useRouter()
 
-// 设置默认显示的路由
-if (router.currentRoute.value.fullPath === '/')
-    router.push('/login')
-
+EasyWorkAPI.getUserInfo()
+    .then((res: any) => {
+        router.push({ name: 'workbench' })
+    })
+    .catch(error => {
+        // 设置默认显示的路由
+        if (router.currentRoute.value.fullPath === '/')
+            router.push('/login')
+    })
 
 </script>
 <style>
