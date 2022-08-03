@@ -19,15 +19,17 @@ import EasyWorkAPI from "../utils/EasyWorkAPI";
 
 const router = useRouter()
 
-EasyWorkAPI.getUserInfo()
+if (router.currentRoute.value.fullPath === '/'){
+    router.push('/login')
+} else {
+    EasyWorkAPI.getUserInfo()
     .then((res: any) => {
         router.push({ name: 'workbench' })
     })
     .catch(error => {
         // 设置默认显示的路由
-        if (router.currentRoute.value.fullPath === '/')
-            router.push('/login')
     })
+}
 
 </script>
 <style>
