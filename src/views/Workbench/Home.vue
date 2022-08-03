@@ -7,8 +7,9 @@
                         @select="handleSelect">
                         <div class="user">
                             <el-avatar @click="dialogUser = true" shape="square" class="user-avatar" :size="32"
-                                :fit="'fill'" :src="'/src/assets/avatar.jpg'" />
+                                :fit="'fill'" :src="userInfo.user_pic" />
                             <div class="user-info">
+                                Hello, {{userInfo.nickname}}
                             </div>
                         </div>
 
@@ -48,40 +49,43 @@
         <!-- 个人信息 -->
         <el-dialog v-model="dialogUser" title="个人信息" width="30%">
             <div>
-                <div>
-                    用户名:
-                    <el-input v-model="userInfo_Name" placeholder="Please input" />
-                </div>
-                <div>
-                    邮箱:
-                    <el-input v-model="userInfo_email" placeholder="Please input" />
-                </div>
-                <div>
+                <div class="avatar-uploader">
                     头像:
-                    <el-upload class="avatar-uploader" action="" accept=".jpg, .png" :show-file-list="false"
-                        :on-change="getFile" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload"
-                        :auto-upload="false">
-                        <el-avatar shape="square" class="user-avatar" :size="32"
-                            :fit="'fill'"  v-if="userInfo_avatar" :src="userInfo_avatar"/>
+                    <el-upload action="" accept=".jpg, .png" :show-file-list="false" :on-change="getFile"
+                        :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload" :auto-upload="false">
+                        <el-avatar shape="square" class="user-avatar" :size="64" :fit="'fill'"
+                            v-if="userInfo.user_pic !== ''" :src="imageUrl" />
                         <el-icon v-else class="avatar-uploader-icon">
                             <Plus />
                         </el-icon>
                     </el-upload>
                 </div>
                 <div>
-                    密码:
+                    用户名:
+                    <el-input v-model="userInfo.nickname" placeholder="Please input" />
+                </div>
+                <div>
+                    邮箱:
+                    <el-input v-model="userInfo.email" placeholder="Please input" />
+                </div>
+                <div>
+                    旧密码:
+                    <el-input type="password" show-password v-model="userInfo_oldPasswd" placeholder="Please input" />
+                </div>
+                <div>
+                    新密码:
                     <el-input type="password" show-password v-model="userInfo_passwd" placeholder="Please input" />
                 </div>
                 <div>
-                    确认密码:
+                    确认新密码:
                     <el-input type="password" show-password v-model="userInfo_confirmPasswd"
                         placeholder="Please input" />
                 </div>
             </div>
             <template #footer>
                 <span class="dialog-footer">
-                    <el-button @click="dialogUser = false">Cancel</el-button>
-                    <el-button type="primary" @click="dialogUser = false">Confirm</el-button>
+                    <el-button @click="dialogUser = false">取消</el-button>
+                    <el-button type="primary" @click="dialogUser = false; saveUserInfo()">保存</el-button>
                 </span>
             </template>
         </el-dialog>
@@ -96,16 +100,32 @@ import { Plus, Notebook, DArrowRight, DArrowLeft } from '@element-plus/icons-vue
 import TaskBoard from '@/views/Workbench/TaskBoard.vue'
 import { ElMessage } from 'element-plus'
 import type { UploadProps, UploadFile, UploadFiles } from 'element-plus'
+import EasyWorkAPI from "@/utils/EasyWorkAPI";
+import type { UserInfo } from '@/utils/Model';
 
 const imageUrl = ref('')
 const projeckId = ref()
 const isCollapse = ref(false)
 const dialogUser = ref(false)
-const userInfo_Name = ref(''),
-    userInfo_email = ref(''),
-    userInfo_avatar = ref(''),
-    userInfo_passwd = ref(''),
-    userInfo_confirmPasswd = ref('');
+
+// 头像发生改动
+let newAvatar = false;
+
+const userInfo = ref<UserInfo>({
+    id: 0,
+    username: '',
+    user_pic: '',
+    nickname: '',
+    email: ''
+})
+
+const userInfo_passwd = ref(''), userInfo_confirmPasswd = ref(''), userInfo_oldPasswd = ref('')
+
+EasyWorkAPI.getUserInfo().then(res => {
+    if (typeof res === 'object') {
+        userInfo.value = res
+    }
+})
 
 let projeckList = [
     {
@@ -124,6 +144,41 @@ let projeckList = [
         id: 'abc125',
     },
 ]
+
+
+const saveUserInfo = () => {
+    let tl = [];
+    if (userInfo_oldPasswd.value !== '' && userInfo_passwd.value !== '' && userInfo_confirmPasswd.value !== '') {
+        if (userInfo_passwd.value !== userInfo_confirmPasswd.value) {
+            ElMessage.error('两次密码不一致')
+            return;
+        } else {
+            tl.push(EasyWorkAPI.updatePwd(
+                userInfo_oldPasswd.value,
+                userInfo_passwd.value,
+                userInfo_confirmPasswd.value)
+            );
+        }
+    }
+    console.log(newAvatar)
+    if (newAvatar) {
+        tl.push(EasyWorkAPI.updateAvatar(imageUrl.value))
+    }
+
+    tl.push(EasyWorkAPI.updateUser(userInfo.value.nickname, userInfo.value.email))
+    console.log(tl)
+    Promise.all(tl).then(res => {
+        ElMessage.success('修改成功')
+        newAvatar = false;
+        EasyWorkAPI.getUserInfo().then(res => {
+            if (typeof res === 'object') {
+                userInfo.value = res
+            }
+        })
+    }).catch(err => {
+        ElMessage.error(err)
+    })
+}
 
 const handleSelect = (index: string, keyPath: string[]) => {
     console.log(index, keyPath)
@@ -149,11 +204,9 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (
 ) => {
     console.log(response)
     console.log(uploadFile)
-    imageUrl.value = URL.createObjectURL(uploadFile.raw!)
 }
 
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
-
     getBase64(rawFile).then(res => {
         console.log(res)
     });
@@ -170,11 +223,15 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
 const getFile = function (uploadFile: UploadFile, uploadFiles: UploadFiles) {
     getBase64(uploadFile.raw!).then(res => {
         console.log(res)
-        userInfo_avatar.value = res
+        if (userInfo.value) {
+            imageUrl.value = res
+            // userInfo.value.user_pic = res
+            newAvatar = true;
+        }
     });
 }
 
-const getBase64 = function (file: any): Promise<string>  {
+const getBase64 = function (file: any): Promise<string> {
     return new Promise(function (resolve, reject) {
         let reader = new FileReader();
         let imgResult = "";
@@ -193,7 +250,7 @@ const getBase64 = function (file: any): Promise<string>  {
 </script>
 
 <style>
-.user .user-avatar {}
+/* .user .user-avatar {} */
 
 .user {
     display: flex;
@@ -212,8 +269,9 @@ const getBase64 = function (file: any): Promise<string>  {
     white-space: nowrap;
 }
 
+/* 
 .user .user-info {
-    /* left: 42px;
+    left: 42px;
     top: 44px;
     float: right;
     width: 100px;
@@ -222,8 +280,8 @@ const getBase64 = function (file: any): Promise<string>  {
     background-color: #000;
     position: fixed;
     border-radius: 4px;
-    border: 1px solid #ccc; */
-}
+    border: 1px solid #ccc; 
+} */
 
 .user .user-avatar:hover~.user-info {
     visibility: visible;
@@ -231,6 +289,10 @@ const getBase64 = function (file: any): Promise<string>  {
 
 .user .user-avatar:hover {
     cursor: pointer;
+}
+
+.avatar-uploader {
+    display: flex;
 }
 
 .el-container,
