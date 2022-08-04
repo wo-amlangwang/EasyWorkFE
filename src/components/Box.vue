@@ -3,11 +3,12 @@ import { useDrop } from 'vue3-dnd'
 import { computed, unref } from 'vue'
 import { toRefs } from '@vueuse/core'
 
+// 注册拖动相关的hook
 const props = defineProps<{
-  accept: string[]
-  lastDroppedItem?: any
-  onDrop: (item: any, monitor: any) => void
-  key: number
+  accept: string[]  // 允许拖放进来的组件类型
+  lastDroppedItem?: any // 上一次拖放进来的组件实例
+  onDrop: (item: any, monitor: any) => void // 拖放进来的回调函数
+  key: number // 事项列表的唯一标识
 }>()
 
 const [collect, drop] = useDrop({
@@ -20,6 +21,8 @@ const [collect, drop] = useDrop({
 })
 
 const { canDrop, isOver } = toRefs(collect)
+
+// 是否激活
 const isActive = computed(() => unref(canDrop) && unref(isOver))
 </script>
 

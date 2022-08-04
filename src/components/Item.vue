@@ -15,12 +15,19 @@
 import { useDrag } from 'vue3-dnd'
 import { toRefs } from '@vueuse/core'
 
+
 interface DropResult {
     name: string
 }
 
-const props = defineProps<{ id: number, title: string, person: string }>()
+const props = defineProps<{ 
+    id: number,  // 事项ID
+    title: string,  // 事项标题
+    person: string  // 事项负责人
+}>()
 
+
+// 注册拖动相关的hook
 
 const [collect, drag] = useDrag(() => ({
     type: 'item',

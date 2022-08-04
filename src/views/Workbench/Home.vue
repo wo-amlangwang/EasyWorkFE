@@ -103,14 +103,22 @@ import type { UploadProps, UploadFile, UploadFiles } from 'element-plus'
 import EasyWorkAPI from "@/utils/EasyWorkAPI";
 import type { UserInfo } from '@/utils/Model';
 
+// 图片链接 更改用户头像时使用
 const imageUrl = ref('')
+
+// 项目ID 传递给事项看板
 const projeckId = ref()
+
+// 是否选择项目 未选中展示空页
 const isCollapse = ref(false)
+
+// 是否显示更改用户信息弹窗
 const dialogUser = ref(false)
 
 // 头像发生改动
 let newAvatar = false;
 
+// 用户信息初始化
 const userInfo = ref<UserInfo>({
     id: 0,
     username: '',
@@ -119,14 +127,17 @@ const userInfo = ref<UserInfo>({
     email: ''
 })
 
+// 用户更改密码相关信息
 const userInfo_passwd = ref(''), userInfo_confirmPasswd = ref(''), userInfo_oldPasswd = ref('')
 
+// 获取用户信息用于展示
 EasyWorkAPI.getUserInfo().then(res => {
     if (typeof res === 'object') {
         userInfo.value = res
     }
 })
 
+// 项目列表demo
 let projeckList = [
     {
         icon: 'el-icon-plus',
@@ -145,9 +156,10 @@ let projeckList = [
     },
 ]
 
-
+// 保存用户信息处理函数
 const saveUserInfo = () => {
     let tl = [];
+    // 检测是否更改密码
     if (userInfo_oldPasswd.value !== '' && userInfo_passwd.value !== '' && userInfo_confirmPasswd.value !== '') {
         if (userInfo_passwd.value !== userInfo_confirmPasswd.value) {
             ElMessage.error('两次密码不一致')
@@ -160,13 +172,18 @@ const saveUserInfo = () => {
             );
         }
     }
+
+    // 检测是否更改头像
     console.log(newAvatar)
     if (newAvatar) {
         tl.push(EasyWorkAPI.updateAvatar(imageUrl.value))
     }
 
+    // 检测是否更改用户名和邮箱
     tl.push(EasyWorkAPI.updateUser(userInfo.value.nickname, userInfo.value.email))
     console.log(tl)
+
+    // 等待所有请求完成
     Promise.all(tl).then(res => {
         ElMessage.success('修改成功')
         newAvatar = false;
@@ -180,6 +197,7 @@ const saveUserInfo = () => {
     })
 }
 
+// 处理选择项目，对事项看板传递项目ID进行切换
 const handleSelect = (index: string, keyPath: string[]) => {
     console.log(index, keyPath)
     if (index === 'newProjeck') {
@@ -191,13 +209,16 @@ const handleSelect = (index: string, keyPath: string[]) => {
     }
 }
 
+// 左栏伸缩处理
 const handleOpen = (key: string, keyPath: string[]) => {
     console.log(key, keyPath)
 }
+// 左栏伸缩处理
 const handleClose = (key: string, keyPath: string[]) => {
     console.log(key, keyPath)
 }
 
+// 头像上传成功回调
 const handleAvatarSuccess: UploadProps['onSuccess'] = (
     response,
     uploadFile
@@ -206,6 +227,7 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (
     console.log(uploadFile)
 }
 
+// 头像上传前处理
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
     getBase64(rawFile).then(res => {
         console.log(res)
@@ -220,6 +242,7 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
     return true
 }
 
+// 获取选中文件
 const getFile = function (uploadFile: UploadFile, uploadFiles: UploadFiles) {
     getBase64(uploadFile.raw!).then(res => {
         console.log(res)
@@ -231,6 +254,7 @@ const getFile = function (uploadFile: UploadFile, uploadFiles: UploadFiles) {
     });
 }
 
+// 获取base64
 const getBase64 = function (file: any): Promise<string> {
     return new Promise(function (resolve, reject) {
         let reader = new FileReader();

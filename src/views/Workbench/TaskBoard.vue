@@ -98,23 +98,28 @@ import lodash from 'lodash';
 import { watch, ref, type Ref } from 'vue';
 import Item from '../../components/Item.vue'
 import Box from '../../components/Box.vue'
-import Tags from '../../components/Tags.vue'
+import Tags from '../../components/Tages/Tags.vue'
 import { Plus, Edit } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
+import type { tag } from "@/components/Tages/tags-type"
 
-const props = defineProps<{ projeckId: Ref }>()
+const props = defineProps<{ 
+    projeckId: Ref // 事项ID
+}>()
+
+// 是否展示事项详情面板
 const drawerTask = ref(false)
-const droppedBoxNames = ref<string[]>([])
 
-interface tag {
-    id: number
-    name: string
-}
+ 
+const droppedBoxNames = ref<string[]>([])
 
 interface ListItem {
     value: string
     label: string
 }
+
+// 事项详情
+// TODO: 迁移至Model
 interface TaskInfo {
     title: string
     person: tag[]
@@ -123,6 +128,9 @@ interface TaskInfo {
     id: number
     status: number
 }
+
+// 事项时间线
+// TODO: 迁移至Model
 interface TaskTimeLine {
     type: number
     time: string
@@ -130,12 +138,13 @@ interface TaskTimeLine {
 }
 
 const list = ref<ListItem[]>([])
-const persons = ref<ListItem[]>([])
 const value = ref<string[]>([])
 const loading = ref(false)
 const taskInfo = ref<TaskInfo>()
 const taskTimeLine = ref<TaskTimeLine[]>([])
 
+
+// 事项详情demo
 taskInfo.value = {
     title: '开发用户管理后端',
     person: [{
@@ -154,6 +163,7 @@ taskInfo.value = {
     status: 0
 }
 
+// 事项时间轴demo
 taskTimeLine.value = [
     {
         type: 1,
@@ -167,6 +177,7 @@ taskTimeLine.value = [
     }
 ]
 
+// 添加负责人回调事件
 const addTag = () => {
     console.log(123);
     ElMessageBox.prompt('请输入用户名/ID', '添加责任人', {
@@ -182,20 +193,22 @@ const addTag = () => {
     })
 }
 
+// 远程用户列表
 const remoteMethod = (query: string) => {
     if (query) {
         loading.value = true
         setTimeout(() => {
             loading.value = false
-            persons.value = list.value.filter((item) => {
-                return item.label.toLowerCase().includes(query.toLowerCase())
-            })
+            // persons.value = list.value.filter((item) => {
+            //     return item.label.toLowerCase().includes(query.toLowerCase())
+            // })
         }, 200)
     } else {
-        persons.value = []
+        // persons.value = []
     }
 }
 
+// 处理拖放
 const handleDrop = (item: any, monitor: any) => {
     console.log(item, monitor)
     const dropResult = monitor.getDropResult() as any
@@ -208,10 +221,10 @@ const handleDrop = (item: any, monitor: any) => {
     // this.appendChild(document.getElementById('item-' + name))
 }
 
-
-
+// 事项详情的相关信息
 const title = ref(''), content = ref(''), person = ref(''), time = ref('')
 
+// 关闭事项详情弹窗确认 可以在这里做保存操作
 const handleClose = (done: () => void) => {
     ElMessageBox.confirm('Are you sure you want to close this?')
         .then(() => {
@@ -222,12 +235,14 @@ const handleClose = (done: () => void) => {
         })
 }
 
+// 点击事项弹出详情面板
 const itemClick = (id: number) => {
     console.log(id)
     title.value = '事项详情' + id
     drawerTask.value = true
 }
 
+// 添加事项列表
 const addList = () => {
     taskList.value.push({
         title: 'TODO',
@@ -237,7 +252,7 @@ const addList = () => {
     });
 }
 
-
+// 事项列表
 const taskList = ref([
     {
         title: '未开始',
@@ -270,6 +285,7 @@ const taskList = ref([
     }
 ]);
 
+// 事项ID变化监视
 watch(
     () => lodash.cloneDeep(props.projeckId),
     (state, prevState) => {

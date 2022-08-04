@@ -1,9 +1,10 @@
+// 用户信息结构
 interface UserInfo {
-    id: number
-    username: string
-    nickname: string
-    email: string
-    user_pic: string
+    id: number // 用户ID
+    username: string // 用户名
+    nickname: string // 昵称
+    email: string   // 邮箱
+    user_pic: string // 用户头像
 }
 
 

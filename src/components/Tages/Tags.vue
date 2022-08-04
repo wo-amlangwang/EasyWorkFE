@@ -14,17 +14,17 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Plus, Close } from '@element-plus/icons-vue'
+import type { tag } from './tags-type'
 
-interface tag {
-    id: number
-    name: string
-}
+const props = defineProps<{ 
+    tags: tag[], // 标签列表
+    addTag: () => void // 添加标签回调函数
+}>()
 
-const props = defineProps<{ tags: tag[], addTag: () => void }>()
 const tags = props.tags
 const addTag = props.addTag
 
-
+// 删除标签处理函数
 const delTag = (item: number) => {
     tags.splice(item, 1)
 }
