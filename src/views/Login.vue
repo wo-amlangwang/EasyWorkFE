@@ -26,7 +26,7 @@ const name = ref(''), password = ref(''), veify = ref(''),
 
 const login = () => {
     loading.value = true;
-    EasyWorkAPI.login(name.value, password.value, '')
+    EasyWorkAPI.user.login(name.value, password.value, '')
         .then((res: any) => {
             console.log(res);
             loading.value = false;

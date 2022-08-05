@@ -22,7 +22,7 @@ const router = useRouter()
 if (router.currentRoute.value.fullPath === '/'){
     router.push('/login')
 } else {
-    EasyWorkAPI.getUserInfo()
+    EasyWorkAPI.user.getUserInfo()
     .then((res: any) => {
         router.push({ name: 'workbench' })
     })
