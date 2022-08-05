@@ -25,6 +25,8 @@ import "../../assets/reset_password.css";
 
 const password = ref(''), verifyPassword = ref(''), loading = ref(false), active = ref(1);
 const router = useRouter()
+
+// 重设密码
 const setpassword = function () {
     if (password.value !== verifyPassword.value) {
         alert('两次输入的密码不一致');
@@ -32,6 +34,8 @@ const setpassword = function () {
     }
     active.value = 2;
     loading.value = true;
+
+    // TODO: 发送重设密码请求
     setTimeout(() => {
         loading.value = false;
         router.push({ name: 'login' })

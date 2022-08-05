@@ -16,30 +16,23 @@
 
 <script setup lang="ts">
 import EasyWorkAPI from "../utils/EasyWorkAPI";
-import router from "@/router";
 import { ElMessageBox } from 'element-plus'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 const name = ref(''), password = ref(''), veify = ref(''),
         loading = ref(false);
 
-function login() {
+const login = () => {
     loading.value = true;
     EasyWorkAPI.login(name.value, password.value, '')
-        .then(msg => {
-            console.log(msg);
-            let ret = JSON.parse(msg);
+        .then((res: any) => {
+            console.log(res);
             loading.value = false;
             // 跳转至 "/workbench"
-            if (ret.success) {
-                console.log('登录成功');
-                router.push({name: 'workbench'});
-            } else {
-                ElMessageBox.alert(ret.message, '登录失败', {
-                    type: 'error',
-                    confirmButtonText: '确定',
-                });
-            }
+            console.log('登录成功');
+            router.push({name: 'workbench'});
         })
         .catch(error => {
             console.log(13);
