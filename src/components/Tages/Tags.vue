@@ -12,7 +12,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
 import { Plus, Close } from '@element-plus/icons-vue'
 import type { tag } from './tags-type'
 
@@ -22,14 +21,12 @@ const props = defineProps<{
     delTag: (item: tag) => void // 删除标签回调函数
 }>()
 
-const tags = props.tags
 const addTag = props.addTag
 
 // 删除标签处理函数
 const delTagHandler = (item: number) => {
-    props.delTag(tags[item])
+    props.delTag(props.tags[item])
 }
-
 </script>
 <style>
 .tags {
