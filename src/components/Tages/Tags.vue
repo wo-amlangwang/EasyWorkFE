@@ -2,7 +2,7 @@
     <div class="tags">
         <span class="item" v-for="(item, key) in tags" :key="key">
             {{ item.name }}
-            <el-icon class="item-del" @click="delTag(key)">
+            <el-icon class="item-del" @click="delTagHandler(key)">
                 <Close />
             </el-icon>
         </span>
@@ -19,14 +19,15 @@ import type { tag } from './tags-type'
 const props = defineProps<{ 
     tags: tag[], // 标签列表
     addTag: () => void // 添加标签回调函数
+    delTag: (item: tag) => void // 删除标签回调函数
 }>()
 
 const tags = props.tags
 const addTag = props.addTag
 
 // 删除标签处理函数
-const delTag = (item: number) => {
-    tags.splice(item, 1)
+const delTagHandler = (item: number) => {
+    props.delTag(tags[item])
 }
 
 </script>
