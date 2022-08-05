@@ -2,7 +2,7 @@
     <div :ref="drag" role="Item" :id="`item-${id}`" class="item">
         <el-space>
             <a>{{ title }}</a>
-            <a src="#">责任人：{{ person }}</a>
+            <a src="#">责任人：{{ person.join() }}</a>
         </el-space>
         <el-space>
             <a>💡</a>
@@ -23,7 +23,7 @@ interface DropResult {
 const props = defineProps<{ 
     id: number,  // 事项ID
     title: string,  // 事项标题
-    person: string  // 事项负责人
+    person: string[]  // 事项负责人
 }>()
 
 
@@ -61,4 +61,6 @@ const { isDragging } = toRefs(collect)
     margin-bottom: 10px;
     box-shadow: 1px 1px 12px rgba(0, 0, 0, 0.1);
 }
+
+
 </style>

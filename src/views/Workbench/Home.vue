@@ -6,23 +6,22 @@
                     <el-menu class="el-menu-vertical" :collapse="isCollapse" @open="handleOpen" @close="handleClose"
                         @select="handleSelect">
                         <div class="user">
-                            <el-avatar @click="dialogUser = true" shape="square" class="user-avatar" :size="32"
+                            <el-avatar @click="imageUrl = userInfo.user_pic; dialogUser = true" shape="square" class="user-avatar" :size="32"
                                 :fit="'fill'" :src="userInfo.user_pic" />
                             <div class="user-info">
                                 Hello, {{userInfo.nickname}}
                             </div>
                         </div>
 
-                        <el-menu-item v-for="(item, index) in projeckList" :key="index" :index="item.id">
+                        <el-menu-item v-for="(item, index) in projeckList" :key="index" :index="item.name">
                             <el-icon :size="20">
                                 <Notebook />
                             </el-icon>
-                            <template #title>{{ item.title }}</template>
+                            <template #title>{{ item.name }}</template>
                         </el-menu-item>
 
                         <div class="btn-control">
-
-                            <el-button :index="`newProjeck`" text
+                            <el-button :index="`newProjeck`" text @click="newProjeck"
                                 style="flex: 1; padding-top: 20px; padding-bottom: 20px; margin-left: 0;">
                                 <el-icon :size="20">
                                     <Plus />
@@ -101,7 +100,7 @@ import TaskBoard from '@/views/Workbench/TaskBoard.vue'
 import { ElMessage } from 'element-plus'
 import type { UploadProps, UploadFile, UploadFiles } from 'element-plus'
 import EasyWorkAPI from "@/utils/EasyWorkAPI";
-import type { UserInfo } from '@/utils/Model';
+import type { UserInfo, ProjectInfo } from '@/utils/Model';
 
 // 图片链接 更改用户头像时使用
 const imageUrl = ref('')
@@ -130,31 +129,36 @@ const userInfo = ref<UserInfo>({
 // 用户更改密码相关信息
 const userInfo_passwd = ref(''), userInfo_confirmPasswd = ref(''), userInfo_oldPasswd = ref('')
 
+// 项目列表
+const projeckList = ref<ProjectInfo[]>([])
+
 // 获取用户信息用于展示
-EasyWorkAPI.getUserInfo().then(res => {
+EasyWorkAPI.user.getUserInfo().then(res => {
     if (typeof res === 'object') {
         userInfo.value = res
     }
 })
 
-// 项目列表demo
-let projeckList = [
-    {
-        icon: 'el-icon-plus',
-        title: 'Projeck 1',
-        id: 'abc123',
-    },
-    {
-        icon: 'el-icon-plus',
-        title: 'Projeck 2',
-        id: 'abc124',
-    },
-    {
-        icon: 'el-icon-plus',
-        title: 'Projeck 3',
-        id: 'abc125',
-    },
-]
+// 获取项目列表
+EasyWorkAPI.project.getList().then(res => {
+    if (typeof res === 'object') {
+        projeckList.value = res
+    }
+}).catch(err => {
+    ElMessage.error(err)
+})
+
+// 新建项目
+const newProjeck = () => {
+    console.log('新建项目')
+    // EasyWorkAPI.project.create().then(res => {
+    //     if (typeof res === 'object') {
+    //         projeckList.value.push(res)
+    //     }
+    // }).catch(err => {
+    //     ElMessage.error(err)
+    // })
+}
 
 // 保存用户信息处理函数
 const saveUserInfo = () => {
@@ -165,7 +169,7 @@ const saveUserInfo = () => {
             ElMessage.error('两次密码不一致')
             return;
         } else {
-            tl.push(EasyWorkAPI.updatePwd(
+            tl.push(EasyWorkAPI.user.updatePassword(
                 userInfo_oldPasswd.value,
                 userInfo_passwd.value,
                 userInfo_confirmPasswd.value)
@@ -176,18 +180,18 @@ const saveUserInfo = () => {
     // 检测是否更改头像
     console.log(newAvatar)
     if (newAvatar) {
-        tl.push(EasyWorkAPI.updateAvatar(imageUrl.value))
+        tl.push(EasyWorkAPI.user.updateAvatar(imageUrl.value))
     }
 
     // 检测是否更改用户名和邮箱
-    tl.push(EasyWorkAPI.updateUser(userInfo.value.nickname, userInfo.value.email))
+    tl.push(EasyWorkAPI.user.updateNickNameAndEmail(userInfo.value.nickname, userInfo.value.email))
     console.log(tl)
 
     // 等待所有请求完成
     Promise.all(tl).then(res => {
         ElMessage.success('修改成功')
         newAvatar = false;
-        EasyWorkAPI.getUserInfo().then(res => {
+        EasyWorkAPI.user.getUserInfo().then(res => {
             if (typeof res === 'object') {
                 userInfo.value = res
             }
@@ -198,8 +202,7 @@ const saveUserInfo = () => {
 }
 
 // 处理选择项目，对事项看板传递项目ID进行切换
-const handleSelect = (index: string, keyPath: string[]) => {
-    console.log(index, keyPath)
+const handleSelect = (index: string) => {
     if (index === 'newProjeck') {
         console.log('新建')
         projeckId.value = ''
