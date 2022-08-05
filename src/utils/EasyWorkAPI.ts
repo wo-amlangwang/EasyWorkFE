@@ -574,8 +574,53 @@ const task = {
                 reject(err);
             });
         });
-    }
+    },
 
+    /**
+     * 获取任务详情
+     * 
+     * @param id 任务id
+     */
+    getInfo: (id: number): Promise<string | TaskInfo> => {
+        return new Promise((resolve, reject) => {
+            axios(prefix + '/task/gettask', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                data: {
+                    id: id,
+                },
+            }).then(res => {
+                if (res.data.status === 0) {
+                    let item = res.data.data[0];
+                    const ret: TaskInfo = {
+                        id: item.id,
+                        name: item.task_name,
+                        project_name: item.project_name,
+                        details: item.task_details,
+                        type: item.type,
+                        create_user: item.create_user,
+                        create_time: item.create_time,
+                        update_user: item.update_user,
+                        update_time: item.update_time,
+                        priority: item.priority,
+                        deadline: item.deadline,
+                        assignee: [item.assignee],
+                        status: item.status,
+                        task_comment: item.task_comment,
+                        deleted: item.deleted,
+                        time_line: new Array(),
+                    }
+                    resolve(ret);
+                } else {
+                    reject(res.data.message);
+                }
+            }).catch(err => {
+                reject(err);
+            });
+        });
+    }
 }
 const EasyWorkAPI = {
     user: user,
