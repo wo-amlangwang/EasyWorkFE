@@ -6,10 +6,10 @@
                     <el-menu class="el-menu-vertical" :collapse="isCollapse" @open="handleOpen" @close="handleClose"
                         @select="handleSelect">
                         <div class="user">
-                            <el-avatar @click="imageUrl = userInfo.user_pic; dialogUser = true" shape="square" class="user-avatar" :size="32"
-                                :fit="'fill'" :src="userInfo.user_pic" />
+                            <el-avatar @click="imageUrl = userInfo.user_pic; dialogUser = true" shape="square"
+                                class="user-avatar" :size="32" :fit="'fill'" :src="userInfo.user_pic" />
                             <div class="user-info">
-                                Hello, {{userInfo.nickname}}
+                                Hello, {{ userInfo.nickname }}
                             </div>
                         </div>
 
@@ -19,16 +19,28 @@
                             </el-icon>
                             <template #title>{{ item.name }}</template>
                         </el-menu-item>
+                        <el-menu-item :index="'quit'">
+                            <el-icon :size="20">
+                                <svg t="1659779113684" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                                    xmlns="http://www.w3.org/2000/svg" p-id="2271" width="720" height="720">
+                                    <path
+                                        d="M874.666667 855.744a19.093333 19.093333 0 0 1-19.136 18.922667H168.469333A19.2 19.2 0 0 1 149.333333 855.530667V168.469333A19.2 19.2 0 0 1 168.469333 149.333333h687.061334c10.581333 0 19.136 8.533333 19.136 18.922667V320h42.666666V168.256A61.717333 61.717333 0 0 0 855.530667 106.666667H168.469333A61.866667 61.866667 0 0 0 106.666667 168.469333v687.061334A61.866667 61.866667 0 0 0 168.469333 917.333333h687.061334A61.76 61.76 0 0 0 917.333333 855.744V704h-42.666666v151.744zM851.84 533.333333l-131.797333 131.754667a21.141333 21.141333 0 0 0 0.213333 29.973333 21.141333 21.141333 0 0 0 29.973333 0.192l165.589334-165.589333a20.821333 20.821333 0 0 0 6.122666-14.976 21.44 21.44 0 0 0-6.314666-14.997333l-168.533334-168.533334a21.141333 21.141333 0 0 0-29.952-0.213333 21.141333 21.141333 0 0 0 0.213334 29.973333L847.296 490.666667H469.333333v42.666666h382.506667z"
+                                        fill="#3D3D3D" p-id="2272" />
+                                </svg>
+                            </el-icon>
+                            <template #title>{{ '退出登录' }}</template>
+                        </el-menu-item>
+
 
                         <div class="btn-control">
-                            <el-button :index="`newProjeck`" text @click="newProjeck"
+                            <!-- <el-button :index="`newProjeck`" text @click="newProjeck"
                                 style="flex: 1; padding-top: 20px; padding-bottom: 20px; margin-left: 0;">
                                 <el-icon :size="20">
                                     <Plus />
                                 </el-icon>
-                            </el-button>
+                            </el-button> -->
                             <el-button @click="isCollapse = !isCollapse" text
-                                style="flex: 1; padding-top: 20px; padding-bottom: 20px; margin-left: 0;">
+                                style="padding-top: 20px; padding-bottom: 20px; margin-left: 0;">
                                 <el-icon :size="20">
                                     <DArrowRight v-if="isCollapse" />
                                     <DArrowLeft v-if="!isCollapse" />
@@ -97,10 +109,12 @@ import { DndProvider } from 'vue3-dnd'
 import { ref } from 'vue'
 import { Plus, Notebook, DArrowRight, DArrowLeft } from '@element-plus/icons-vue'
 import TaskBoard from '@/views/Workbench/TaskBoard.vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import type { UploadProps, UploadFile, UploadFiles } from 'element-plus'
 import EasyWorkAPI from "@/utils/EasyWorkAPI";
 import type { UserInfo, ProjectInfo } from '@/utils/Model';
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 // 图片链接 更改用户头像时使用
 const imageUrl = ref('')
@@ -113,6 +127,9 @@ const isCollapse = ref(false)
 
 // 是否显示更改用户信息弹窗
 const dialogUser = ref(false)
+
+// 是否显示新建项目弹窗
+const dialogNewProjeck = ref(false)
 
 // 头像发生改动
 let newAvatar = false;
@@ -132,6 +149,17 @@ const userInfo_passwd = ref(''), userInfo_confirmPasswd = ref(''), userInfo_oldP
 // 项目列表
 const projeckList = ref<ProjectInfo[]>([])
 
+// 新建项目
+const newProjeck = ref<ProjectInfo>({
+    id: 0,
+    name: '',
+    details: '',
+    deleted: 0,
+    master: '',
+    create_time: '',
+
+})
+
 // 获取用户信息用于展示
 EasyWorkAPI.user.getUserInfo().then(res => {
     if (typeof res === 'object') {
@@ -149,15 +177,19 @@ EasyWorkAPI.project.getList().then(res => {
 })
 
 // 新建项目
-const newProjeck = () => {
-    console.log('新建项目')
-    // EasyWorkAPI.project.create().then(res => {
-    //     if (typeof res === 'object') {
-    //         projeckList.value.push(res)
-    //     }
-    // }).catch(err => {
-    //     ElMessage.error(err)
-    // })
+const createProject = () => {
+    EasyWorkAPI.project.create(newProjeck.value.name, newProjeck.value.details).then(res => {
+        ElMessage.success(res);
+        newProjeck.value.name = '';
+        newProjeck.value.details = '';
+        return EasyWorkAPI.project.getList();
+    }).then(res => {
+        if (typeof res === 'object') {
+            projeckList.value = res
+        }
+    }).catch(err => {
+        ElMessage.error(err)
+    })
 }
 
 // 保存用户信息处理函数
@@ -206,6 +238,22 @@ const handleSelect = (index: string) => {
     if (index === 'newProjeck') {
         console.log('新建')
         projeckId.value = ''
+        dialogNewProjeck.value = true
+    } else if (index === 'quit') {
+        // 提示是否退出
+        ElMessageBox.confirm(
+            '确认退出？',
+            '提示',
+            {
+                distinguishCancelAndClose: true,
+                confirmButtonText: '确认',
+                cancelButtonText: '取消',
+            }
+        )
+            .then(() => {
+                localStorage.removeItem('token');
+                router.push('/login')
+            })
     } else {
         projeckId.value = index
         console.log(`选择了 ${projeckId.value}`)
@@ -281,6 +329,7 @@ const getBase64 = function (file: any): Promise<string> {
 
 .user {
     display: flex;
+    overflow: hidden;
     align-items: center;
     height: var(--el-menu-item-height);
     line-height: var(--el-menu-item-height);
@@ -340,7 +389,6 @@ const getBase64 = function (file: any): Promise<string> {
 }
 
 .el-menu-vertical:not(.el-menu--collapse) button {
-    width: 50%;
     margin: 0 auto;
     transition: border-color var(--el-transition-duration), background-color var(--el-transition-duration), color var(--el-transition-duration);
 }

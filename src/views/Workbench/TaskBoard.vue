@@ -1,7 +1,7 @@
 <template>
     <div v-show="!props.projeckId">
         <!-- 零页 -->
-        <el-empty description="description" />
+        <el-empty description="" />
     </div>
     <div v-show="props.projeckId" class="task-box">
         <div class="task-list" v-for="(item, index) in taskList" :key="index">
@@ -72,24 +72,6 @@
                         {{ item.details }}
                     </el-card>
                 </el-timeline-item>
-                <!-- <el-timeline-item timestamp="2018/4/12" placement="top">
-                    <el-card>
-                        <h4>Update Github template</h4>
-                        <p>Tom committed 2018/4/12 20:46</p>
-                    </el-card>
-                </el-timeline-item>
-                <el-timeline-item timestamp="2018/4/3" placement="top">
-                    <el-card>
-                        <h4>Update Github template</h4>
-                        <p>Tom committed 2018/4/3 20:46</p>
-                    </el-card>
-                </el-timeline-item>
-                <el-timeline-item timestamp="2018/4/2" placement="top">
-                    <el-card>
-                        <h4>Update Github template</h4>
-                        <p>Tom committed 2018/4/2 20:46</p>
-                    </el-card>
-                </el-timeline-item> -->
             </el-timeline>
             <div class="task-detail-content">
                 <h4>评论</h4>
