@@ -19,6 +19,12 @@
                             </el-icon>
                             <template #title>{{ item.name }}</template>
                         </el-menu-item>
+                        <el-menu-item :index="'newProjeck'">
+                            <el-icon :size="20">
+                                <Plus />
+                            </el-icon>
+                            <template #title> {{ '新建项目' }} </template>
+                        </el-menu-item>
                         <el-menu-item :index="'quit'">
                             <el-icon :size="20">
                                 <svg t="1659779113684" class="icon" viewBox="0 0 1024 1024" version="1.1"
@@ -97,6 +103,26 @@
                 <span class="dialog-footer">
                     <el-button @click="dialogUser = false">取消</el-button>
                     <el-button type="primary" @click="dialogUser = false; saveUserInfo()">保存</el-button>
+                </span>
+            </template>
+        </el-dialog>
+        <!-- 新建项目 -->
+        <el-dialog v-model="dialogNewProjeck" title="新建项目" width="30%">
+            <div>
+                <div>
+                    项目名:
+                    <el-input v-model="newProjeck.name" placeholder="请输入项目名" />
+                </div>
+                <div>
+                    项目说明:
+                    <el-input type="textarea" :resize="'none'" :rows="10" v-model="newProjeck.details"
+                        placeholder="请输入事项内容" />
+                </div>
+            </div>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="dialogNewProjeck = false">取消</el-button>
+                    <el-button type="primary" @click="dialogNewProjeck = false; createProject()">创建</el-button>
                 </span>
             </template>
         </el-dialog>

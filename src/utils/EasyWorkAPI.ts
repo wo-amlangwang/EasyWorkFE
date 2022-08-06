@@ -201,7 +201,7 @@ const project = {
                 },
             }).then(res => {
                 if (res.data.status === 0) {
-                    resolve(res.data);
+                    resolve(res.data.message);
                 } else {
                     reject(res.data.message);
                 }
