@@ -1,6 +1,5 @@
 import axios from "axios";
 import type { UserInfo, ProjectInfo, TaskInfo, TimeLine } from '@/utils/Model';
-import { rest } from "lodash";
 
 const prefix = "api";
 
@@ -51,7 +50,7 @@ const user = {
             }).then(res => {
                 console.log(res);
                 if (res.data.status == 0) {
-                    let token = res.data.token.substring(7, res.data.token.length);
+                    let token = res.data.token;
                     localStorage.setItem('token', token);
                     resolve(res.data);
                 } else {
@@ -74,7 +73,7 @@ const user = {
             axios(prefix + '/my/userinfo', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     nickname: nickname,
@@ -101,7 +100,7 @@ const user = {
             axios(prefix + '/my/userinfo', {
                 method: 'GET',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 }
             }).then(res => {
                 if (res.data.status == 0) {
@@ -134,7 +133,7 @@ const user = {
             axios(prefix + '/my/updatepwd', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     oldPwd: oldpwd,
@@ -163,7 +162,7 @@ const user = {
             axios(prefix + '/my/update/avatar', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     avatar: avatar
@@ -193,7 +192,7 @@ const project = {
             axios(prefix + '/project/create', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     project_name: project_name,
@@ -218,7 +217,7 @@ const project = {
             axios(prefix + '/project/projectlist', {
                 method: 'GET',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 }
             }).then(res => {
                 if (res.data.status == 0) {
@@ -254,7 +253,7 @@ const project = {
             axios(prefix + '/project/addmember', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     projectname: projectname,
@@ -281,14 +280,14 @@ const project = {
             axios(prefix + '/project/deleteproject', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     project_name: projectname,
                 },
             }).then(res => {
                 if (res.data.status === 0) {
-                    resolve(res.data);
+                    resolve(res.data.message);
                 } else {
                     reject(res.data.message);
                 }
@@ -303,18 +302,21 @@ const project = {
      * 
      * @param projectname 项目名称
      */
-    getInfo: (projectname: string): Promise<string | ProjectInfo> => {
+    getInfo: (projectname: string): Promise<ProjectInfo> => {
         return new Promise((resolve, reject) => {
             axios(prefix + '/project/getproject', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
+                },
+                data: {
+                    project_name: projectname,
                 }
             }).then(res => {
                 if (res.data.status == 0) {
                     const ret: ProjectInfo = {
                         id: res.data.data.id,
-                        name: res.data.data.p_name,
+                        name: res.data.data.project_name,
                         details: res.data.data.project_details,
                         master: res.data.data.create_user,
                         create_time: res.data.data.create_time,
@@ -336,15 +338,17 @@ const project = {
      * @param projectname 项目名称
      * @param project_details 项目说明
      */
-    update: (projectname: string, project_details: string): Promise<string> => {
+    update: (id: number, projectname: string, project_details: string): Promise<string> => {
         return new Promise((resolve, reject) => {
             axios(prefix + '/project/updateproject', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
-
+                    id: id,
+                    project_name: projectname,
+                    project_details: project_details
                 },
             }).then(res => {
                 if (res.data.status === 0) {
@@ -368,7 +372,7 @@ const project = {
             axios(prefix + '/project/projectmemberlist', {
                 method: 'GET',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 }
             }).then(res => {
                 if (res.data.status == 0) {
@@ -391,12 +395,12 @@ const project = {
      * 
      * @param projectname 项目名称
      */
-    getTaskList: (projectname: string): Promise<string | TaskInfo[]> => {
+    getTaskList: (projectname: string): Promise<TaskInfo[]> => {
         return new Promise((resolve, reject) => {
             axios(prefix + '/project/projecttasklist', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     project_name: projectname,
@@ -442,11 +446,19 @@ const task = {
      * @param info 任务信息
      */
     craete: (info: TaskInfo): Promise<string> => {
+        const tn = new Date(info.deadline)
+        const t = tn.getFullYear().toString().padStart(2, '0') + '-' +
+            (tn.getMonth() + 1).toString().padStart(2, '0') + '-' +
+            tn.getDate().toString().padStart(2, '0') + ' ' +
+            tn.getHours().toString().padStart(2, '0') + ':' +
+            tn.getMinutes().toString().padStart(2, '0') + ':' +
+            tn.getSeconds().toString().padStart(2, '0');
+
         return new Promise((resolve, reject) => {
-            axios(prefix + '/project/create', {
+            axios(prefix + '/task/create', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     task_name: info.name,
@@ -454,13 +466,12 @@ const task = {
                     project_name: info.project_name,
                     type: info.type,
                     priority: info.priority,
-                    deadline: info.deadline,
-                    assignee: info.assignee,
-                    task_comment: info.task_comment
+                    deadline: t,
+                    assignee: info.assignee[0]
                 },
             }).then(res => {
                 if (res.data.status === 0) {
-                    resolve(res.data);
+                    resolve(res.data.message);
                 } else {
                     reject(res.data.message);
                 }
@@ -480,7 +491,7 @@ const task = {
             axios(prefix + '/task/deletetask', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     id: id,
@@ -508,7 +519,7 @@ const task = {
             axios(prefix + '/task/tasktypelist/' + type, {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     project_name: projectname,
@@ -558,7 +569,7 @@ const task = {
             axios(prefix + '/task/updatetaskstatus/' + status, {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     project_name: projectname,
@@ -586,7 +597,7 @@ const task = {
             axios(prefix + '/task/gettask', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': '' + localStorage.getItem('token')
                 },
                 data: {
                     id: id,
