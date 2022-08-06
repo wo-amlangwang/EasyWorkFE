@@ -7,16 +7,6 @@
         <div class="task-list" v-for="(item, index) in taskList" :key="index">
             <h3>
                 {{ item.title }}
-                <el-button text>
-                    <el-icon>
-                        <Edit />
-                    </el-icon>
-                </el-button>
-                <el-button text style="float: right; position: relative;">
-                    <el-icon>
-                        <Plus />
-                    </el-icon>
-                </el-button>
             </h3>
             <Box :key="index" :accept="item.access" :onDrop="item.handle">
                 <Item v-for="(task, idx) in item.task" :key="task.id" :id="task.id" :title="task.name"
@@ -24,12 +14,31 @@
                 </Item>
             </Box>
         </div>
-
-        <!-- <div class="task-list list-add dashed" @click="addList()">
-            <el-icon :size="40">
-                <Plus />
-            </el-icon>
-        </div> -->
+        <div class="project-info">
+            <h2><a style="color: #cccccc; margin-right: .2em;">
+                    {{ '#' + projeckInfo.id }}</a>项目详情
+                <el-button text :icon="Delete" @click="deleteProject" />
+            </h2>
+            <h3>
+                项目标题
+                <el-button text :icon="Edit" @click="editProjectName" />
+            </h3>
+            <a>{{ projeckInfo.name }}</a>
+            <h3>创建者</h3>
+            <span>{{ projeckInfo.master }}</span>
+            <h3>创建时间</h3>
+            <a>{{ projeckInfo.create_time }}</a>
+            <h3>
+                说明
+                <el-button text :icon="Edit" @click="editProjectDetails" />
+            </h3>
+            <p>{{ projeckInfo.details }}</p>
+            <!--        
+            -->
+            <el-button style="width: 100%;" @click="dialogNewTask = true">
+                创建任务
+            </el-button>
+        </div>
     </div>
 
     <!-- 事项详情 -->
@@ -81,9 +90,32 @@
                 </el-button>
             </div>
         </div>
-
     </el-drawer>
-
+    <!-- 新建任务 -->
+    <el-dialog v-model="dialogNewTask" title="新建任务" width="30%" class="dialog-card">
+        <div>
+            <div class="dialog-item">
+                任务标题:
+                <el-input v-model="newTaskInfo.name" placeholder="请输入任务名" />
+            </div>
+            <div class="dialog-item">
+                任务说明:
+                <el-input type="textarea" :resize="'none'" :rows="4" v-model="newTaskInfo.details"
+                    placeholder="请输入任务内容" />
+            </div>
+            <div class="dialog-item">
+                截至时间:
+                <el-date-picker v-model="newTaskInfo.deadline" type="datetime" placeholder="截止时间"
+                    :shortcuts="shortcuts" />
+            </div>
+        </div>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="dialogNewTask = false">取消</el-button>
+                <el-button type="primary" @click="dialogNewTask = false; createTask()">创建</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </template>
 <script setup lang="ts">
 import lodash, { times } from 'lodash';
@@ -91,12 +123,14 @@ import { watch, ref } from 'vue';
 import Item from '@/components/Item.vue';
 import Box from '@/components/Box.vue';
 import Tags from '../../components/Tages/Tags.vue';
-import { Plus, Edit } from '@element-plus/icons-vue';
+import { Plus, Edit, Delete } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
 import type { tag } from "@/components/Tages/tags-type";
-import type { TaskInfo, TimeLine } from '@/utils/Model';
+import type { TaskInfo, TimeLine, ProjectInfo } from '@/utils/Model';
 import EasyWorkAPI from '@/utils/EasyWorkAPI';
 import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 // 事项列表
 interface taskList {
@@ -106,20 +140,46 @@ interface taskList {
     task: TaskInfo[]
 }
 
-interface ListItem {
-    value: string
-    label: string
-}
-
 const props = defineProps<{
     projeckId: string // 事项ID
+    projectChange: (projectId: string, type: number) => void
 }>()
 
 // 是否展示事项详情面板
 const drawerTask = ref(false)
+const dialogNewTask = ref(false)
 const timeStatus = ref('')
 const droppedBoxNames = ref<string[]>([])
 
+// 项目详情
+const projeckInfo = ref<ProjectInfo>({
+    id: 0,
+    name: '',
+    details: '',
+    master: '',
+    create_time: '',
+    deleted: 0
+});
+
+// 新建任务信息
+const newTaskInfo = ref<TaskInfo>({
+    id: 0,
+    name: '',
+    details: '',
+    priority: 0,
+    project_name: '',
+    type: 0,
+    create_user: '',
+    create_time: '',
+    update_user: '',
+    update_time: '',
+    deadline: '',
+    assignee: [],
+    status: 0,
+    task_comment: '',
+    deleted: 0,
+    time_line: []
+})
 
 // 处理拖放
 const handleDrop = (item: any, monitor: any) => {
@@ -180,22 +240,30 @@ const taskList = ref<taskList[]>([
 
 const shortcuts = [
     {
-        text: 'Today',
+        text: '今天',
         value: new Date(),
     },
     {
-        text: 'Yesterday',
+        text: '明天',
         value: () => {
             const date = new Date()
-            date.setTime(date.getTime() - 3600 * 1000 * 24)
+            date.setTime(date.getTime() + 3600 * 1000 * 24)
             return date
         },
     },
     {
-        text: 'A week ago',
+        text: '一周后',
         value: () => {
             const date = new Date()
-            date.setTime(date.getTime() - 3600 * 1000 * 24 * 7)
+            date.setTime(date.getTime() + 3600 * 1000 * 24 * 7)
+            return date
+        },
+    },
+    {
+        text: '一个月后',
+        value: () => {
+            const date = new Date()
+            date.setMonth(date.getMonth() + 1)
             return date
         },
     },
@@ -213,6 +281,85 @@ const shortcuts = [
 //         details: "李四: 该需求需要进一步评估"
 //     }
 // ]
+
+
+// 新建任务
+const createTask = () => {
+    newTaskInfo.value.project_name = projeckInfo.value.name
+    newTaskInfo.value.assignee = ['' + localStorage.getItem('username')]
+    EasyWorkAPI.task.craete(newTaskInfo.value).then(res => {
+        ElMessage.success(res)
+        EasyWorkAPI.project.getTaskList(props.projeckId).then(res => {
+            res.forEach(item => {
+                taskList.value[item.status].task
+                    .push(item)
+            })
+        }).catch(err => {
+            console.log(err)
+        })
+    })
+}
+
+// 修改项目说明
+const editProjectDetails = () => {
+    ElMessageBox.prompt('请输入项目说明', '项目说明', {
+        inputType: 'textarea',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputValue: projeckInfo.value.details,
+    }).then(({ value }) => {
+        console.log(value)
+        projeckInfo.value.details = value;
+        return EasyWorkAPI.project.update(projeckInfo.value.id, projeckInfo.value.name, value);
+    }).then(res => {
+        ElMessage.success(res)
+    }).catch(res => {
+        if (res != 'cancel') {
+            ElMessage.error(res)
+        }
+        console.log(res)
+    })
+};
+
+// 修改项目名称
+const editProjectName = () => {
+    ElMessageBox.prompt('请输入项目名称', '项目名称', {
+        inputType: 'text',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputValue: projeckInfo.value.name,
+    }).then(({ value }) => {
+        projeckInfo.value.name = value;
+        return EasyWorkAPI.project.update(projeckInfo.value.id, value, projeckInfo.value.details);
+    }).then(res => {
+        ElMessage.success(res)
+        props.projectChange(projeckInfo.value.name, 2)
+    }).catch(res => {
+        if (res != 'cancel') {
+            ElMessage.error(res)
+        }
+        console.log(res)
+    })
+};
+
+// 删除项目
+const deleteProject = () => {
+    ElMessageBox.confirm('确定删除项目吗？', '删除项目', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+    }).then(() => {
+        return EasyWorkAPI.project.delete(projeckInfo.value.name)
+    }).then(res => {
+        ElMessage.success(res)
+        props.projectChange(projeckInfo.value.name, 1)
+    }).catch(res => {
+        if (res != 'cancel') {
+            ElMessage.error(res)
+        }
+        console.log(res)
+    })
+}
+
 
 // 添加负责人回调事件
 const addTag = () => {
@@ -338,12 +485,13 @@ watch(
             }
         ];
         EasyWorkAPI.project.getTaskList(props.projeckId).then(res => {
-            if (typeof res === 'object' && taskList.value !== undefined) {
-                res.forEach(item => {
-                    taskList.value[item.status].task
-                        .push(item)
-                })
-            }
+            res.forEach(item => {
+                taskList.value[item.status].task
+                    .push(item)
+            })
+            return EasyWorkAPI.project.getInfo(props.projeckId);
+        }).then(res => {
+            projeckInfo.value = res;
         }).catch(err => {
             console.log(err)
         })
@@ -359,6 +507,20 @@ watch(
 .task-box {
     display: flex;
     height: 100%;
+}
+
+.project-info {
+    width: 300px;
+    padding: 10px;
+    background-color: #fff;
+    border-right: 1px solid #ebeef5;
+    box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ccc;
+
+}
+
+.dialog-item {
+    margin-bottom: 10px;
 }
 
 h3 {

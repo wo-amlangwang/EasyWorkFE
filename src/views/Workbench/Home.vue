@@ -37,8 +37,7 @@
                             <template #title>{{ '退出登录' }}</template>
                         </el-menu-item>
 
-
-                        <div class="btn-control">
+                        <div class="btn-control" style="float: inline-end; position: relative;">
                             <!-- <el-button :index="`newProjeck`" text @click="newProjeck"
                                 style="flex: 1; padding-top: 20px; padding-bottom: 20px; margin-left: 0;">
                                 <el-icon :size="20">
@@ -58,7 +57,7 @@
                 </el-aside>
                 <el-main>
                     <DndProvider :backend="HTML5Backend">
-                        <TaskBoard :projeckId="projeckId" />
+                        <TaskBoard :projeckId="projeckId" :projectChange="projectChange" />
                     </DndProvider>
                 </el-main>
             </el-container>
@@ -66,7 +65,7 @@
         <!-- 个人信息 -->
         <el-dialog v-model="dialogUser" title="个人信息" width="30%">
             <div>
-                <div class="avatar-uploader">
+                <div class="avatar-uploader dialog-item">
                     头像:
                     <el-upload action="" accept=".jpg, .png" :show-file-list="false" :on-change="getFile"
                         :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload" :auto-upload="false">
@@ -77,23 +76,23 @@
                         </el-icon>
                     </el-upload>
                 </div>
-                <div>
+                <div class="dialog-item">
                     用户名:
                     <el-input v-model="userInfo.nickname" placeholder="Please input" />
                 </div>
-                <div>
+                <div class="dialog-item">
                     邮箱:
                     <el-input v-model="userInfo.email" placeholder="Please input" />
                 </div>
-                <div>
+                <div class="dialog-item">
                     旧密码:
                     <el-input type="password" show-password v-model="userInfo_oldPasswd" placeholder="Please input" />
                 </div>
-                <div>
+                <div class="dialog-item">
                     新密码:
                     <el-input type="password" show-password v-model="userInfo_passwd" placeholder="Please input" />
                 </div>
-                <div>
+                <div class="dialog-item">
                     确认新密码:
                     <el-input type="password" show-password v-model="userInfo_confirmPasswd"
                         placeholder="Please input" />
@@ -109,11 +108,11 @@
         <!-- 新建项目 -->
         <el-dialog v-model="dialogNewProjeck" title="新建项目" width="30%">
             <div>
-                <div>
+                <div class="dialog-item">
                     项目名:
                     <el-input v-model="newProjeck.name" placeholder="请输入项目名" />
                 </div>
-                <div>
+                <div class="dialog-item">
                     项目说明:
                     <el-input type="textarea" :resize="'none'" :rows="10" v-model="newProjeck.details"
                         placeholder="请输入事项内容" />
@@ -185,6 +184,34 @@ const newProjeck = ref<ProjectInfo>({
     create_time: '',
 
 })
+
+// 项目发生变动
+const projectChange = (projectId: string, type: number) => {
+    console.log(projectId, type)
+    switch (type) {
+        case 1:
+            // 删除
+            projeckId.value = '';
+            projeckList.value.forEach((item, index) => {
+                if (item.name === projectId) {
+                    projeckList.value.splice(index, 1)
+                }
+            })
+            break;
+        case 2:
+            // 名称变动
+            EasyWorkAPI.project.getList().then(res => {
+                if (typeof res === 'object') {
+                    projeckList.value = res
+                }
+            }).catch(err => {
+                ElMessage.error(err)
+            })
+            break;
+        default:
+            break;
+    }
+}
 
 // 获取用户信息用于展示
 EasyWorkAPI.user.getUserInfo().then(res => {
@@ -371,6 +398,9 @@ const getBase64 = function (file: any): Promise<string> {
     white-space: nowrap;
 }
 
+.dialog-card .dialog-item {
+    margin-bottom: 10px;
+}
 /* 
 .user .user-info {
     left: 42px;
