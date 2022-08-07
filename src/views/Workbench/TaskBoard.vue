@@ -8,9 +8,12 @@
             <h3>
                 {{ item.title }}
             </h3>
-            <Box :key="index" :accept="item.access" :onDrop="item.handle">
+            <Box :key="index" :accept="item.access" :onDrop="() => ({
+                name: `${item.status}`,
+                allowedDropEffect: 'move',
+            })">
                 <Item v-for="(task, idx) in item.task" :key="task.id" :id="task.id" :title="task.name"
-                    :person="task.assignee" @click="itemClick(task.id)">
+                    :person="task.assignee" @click="itemClick(task.id)" :end="item.handle">
                 </Item>
             </Box>
         </div>
@@ -118,7 +121,7 @@
     </el-dialog>
 </template>
 <script setup lang="ts">
-import lodash, { times } from 'lodash';
+import lodash from 'lodash';
 import { watch, ref } from 'vue';
 import Item from '@/components/Item.vue';
 import Box from '@/components/Box.vue';
@@ -133,11 +136,18 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 // 事项列表
-interface taskList {
+interface TaskList {
     title: string
     access: string[]
     handle: (item: any, monitor: any) => void
-    task: TaskInfo[]
+    task: TaskInfo[],
+    status: number
+}
+
+interface DropResult {
+    allowedDropEffect: string
+    dropEffect: string
+    name: string
 }
 
 const props = defineProps<{
@@ -149,7 +159,7 @@ const props = defineProps<{
 const drawerTask = ref(false)
 const dialogNewTask = ref(false)
 const timeStatus = ref('')
-const droppedBoxNames = ref<string[]>([])
+
 
 // 项目详情
 const projeckInfo = ref<ProjectInfo>({
@@ -183,11 +193,18 @@ const newTaskInfo = ref<TaskInfo>({
 
 // 处理拖放
 const handleDrop = (item: any, monitor: any) => {
-    console.log(item, monitor)
-    const dropResult = monitor.getDropResult() as any
-    if (dropResult) {
-        droppedBoxNames.value.push(dropResult.name)
-    }
+    const dropResult = monitor.getDropResult() as DropResult
+    console.log(item, dropResult, dropResult.name);
+    taskList.value[taskMap.get(item.name)].task.forEach(task => {
+        if (task.id == item.name && taskMap.has(item.name)) {
+            taskList.value[Number(dropResult.name)].task.push(task);
+            taskList.value[taskMap.get(item.name)].task
+                .splice(taskList.value[taskMap.get(item.name)]
+                    .task.indexOf(task), 1);
+            taskMap.set(item.name, dropResult.name);
+            EasyWorkAPI.task.updateStatus(props.projeckId, item.name, Number(dropResult.name));
+        }
+    })
     // const { name } = item
     // droppedBoxNames.value.push(name)
     // console.log(name)
@@ -217,26 +234,31 @@ const tags = ref<tag[]>([])
 const taskTimeLine = ref<TimeLine[]>([])
 const content = ref(''), percentage = ref(0)
 
-const taskList = ref<taskList[]>([
+const taskList = ref<TaskList[]>([
     {
         title: '未开始',
         access: ['item'],
         handle: handleDrop,
-        task: []
+        task: [],
+        status: 0
     },
     {
         title: '进行中',
         access: ['item'],
         handle: handleDrop,
-        task: []
+        task: [],
+        status: 1
     },
     {
         title: '已完成',
         access: ['item'],
         handle: handleDrop,
-        task: []
+        task: [],
+        status: 2
     }
 ]);
+
+const taskMap = new Map();
 
 const shortcuts = [
     {
@@ -281,7 +303,6 @@ const shortcuts = [
 //         details: "李四: 该需求需要进一步评估"
 //     }
 // ]
-
 
 // 新建任务
 const createTask = () => {
@@ -455,7 +476,8 @@ const addList = () => {
         title: 'TODO',
         access: ['item'],
         handle: handleDrop,
-        task: []
+        task: [],
+        status: -1
     });
 }
 
@@ -464,30 +486,35 @@ watch(
     () => lodash.cloneDeep(props.projeckId),
     (state, prevState) => {
         // 事项详情
+        taskMap.clear();
         taskList.value = [
             {
                 title: '未开始',
                 access: ['item'],
                 handle: handleDrop,
-                task: []
+                task: [],
+                status: 0
             },
             {
                 title: '进行中',
                 access: ['item'],
                 handle: handleDrop,
-                task: []
+                task: [],
+                status: 1
             },
             {
                 title: '已完成',
                 access: ['item'],
                 handle: handleDrop,
-                task: []
+                task: [],
+                status: 2
             }
         ];
         EasyWorkAPI.project.getTaskList(props.projeckId).then(res => {
             res.forEach(item => {
                 taskList.value[item.status].task
-                    .push(item)
+                    .push(item);
+                taskMap.set(item.id, item.status);
             })
             return EasyWorkAPI.project.getInfo(props.projeckId);
         }).then(res => {

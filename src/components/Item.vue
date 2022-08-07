@@ -20,25 +20,19 @@ interface DropResult {
     name: string
 }
 
-const props = defineProps<{ 
+const props = defineProps<{
     id: number,  // 事项ID
     title: string,  // 事项标题
-    person: string[]  // 事项负责人
+    person: string[],  // 事项负责人
+    end: (item: any, monitor: any) => void // 被拖放的回调函数
 }>()
 
 
 // 注册拖动相关的hook
-
 const [collect, drag] = useDrag(() => ({
     type: 'item',
-    item: () => ({
-        name: props.id,
-    }),
-    end: (item, monitor) => {
-        // 加入到目标组件的数据中
-        const dropResult = monitor.getDropResult() as DropResult
-
-    },
+    item: { name: props.id },
+    end: props.end,
     collect: monitor => ({
         isDragging: monitor.isDragging(),
         handlerId: monitor.getHandlerId(),
@@ -61,6 +55,4 @@ const { isDragging } = toRefs(collect)
     margin-bottom: 10px;
     box-shadow: 1px 1px 12px rgba(0, 0, 0, 0.1);
 }
-
-
 </style>
