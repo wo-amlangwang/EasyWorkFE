@@ -471,7 +471,7 @@ const task = {
                 },
             }).then(res => {
                 if (res.data.status === 0) {
-                    resolve(res.data.message);
+                    resolve(res.data.id);
                 } else {
                     reject(res.data.message);
                 }
