@@ -18,7 +18,8 @@ const user = {
                 method: 'POST',
                 data: {
                     username: name,
-                    password: password
+                    password: password,
+                    email: email
                 },
             }).then(res => {
                 if (res.data.status === 0) {
