@@ -22,7 +22,6 @@ interface TaskInfo {
     id: number // 任务ID
     name: string // 任务名称
     details: string // 任务详情
-    project_name: string // 项目名称
     type: number, // 任务类型
     create_user: string // 创建者
     update_user: string // 更新者

@@ -177,7 +177,6 @@ const newTaskInfo = ref<TaskInfo>({
     name: '',
     details: '',
     priority: 0,
-    project_name: '',
     type: 0,
     create_user: '',
     create_time: '',
@@ -202,7 +201,7 @@ const handleDrop = (item: any, monitor: any) => {
                 .splice(taskList.value[taskMap.get(item.name)]
                     .task.indexOf(task), 1);
             taskMap.set(item.name, dropResult.name);
-            EasyWorkAPI.task.updateStatus(props.projeckId, item.name, Number(dropResult.name));
+            EasyWorkAPI.task.updateStatus(Number(props.projeckId), item.name, Number(dropResult.name));
         }
     })
     // const { name } = item
@@ -216,7 +215,6 @@ const taskInfo = ref<TaskInfo>({
     id: 0,
     name: '',
     details: '',
-    project_name: '',
     type: 0,
     create_user: '',
     update_user: '',
@@ -306,9 +304,8 @@ const shortcuts = [
 
 // 新建任务
 const createTask = () => {
-    newTaskInfo.value.project_name = projeckInfo.value.name
     newTaskInfo.value.assignee = ['' + localStorage.getItem('username')]
-    EasyWorkAPI.task.craete(newTaskInfo.value).then(res => {
+    EasyWorkAPI.task.craete(Number(props.projeckId), newTaskInfo.value).then(res => {
         ElMessage.success('创建成功')
         taskList.value[0].task.push(newTaskInfo.value);
         taskMap.set(res, 0);
@@ -363,7 +360,7 @@ const deleteProject = () => {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
     }).then(() => {
-        return EasyWorkAPI.project.delete(projeckInfo.value.name)
+        return EasyWorkAPI.project.delete(Number(props.projeckId));
     }).then(res => {
         ElMessage.success(res)
         props.projectChange(projeckInfo.value.name, 1)
@@ -504,13 +501,13 @@ watch(
                 status: 2
             }
         ];
-        EasyWorkAPI.project.getTaskList(props.projeckId).then(res => {
+        EasyWorkAPI.project.getTaskList(Number(props.projeckId)).then(res => {
             res.forEach(item => {
                 taskList.value[item.status].task
                     .push(item);
                 taskMap.set(item.id, item.status);
             })
-            return EasyWorkAPI.project.getInfo(props.projeckId);
+            return EasyWorkAPI.project.getInfo(Number(props.projeckId));
         }).then(res => {
             projeckInfo.value = res;
         }).catch(err => {

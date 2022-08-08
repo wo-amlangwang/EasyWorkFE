@@ -13,7 +13,7 @@
                             </div>
                         </div>
 
-                        <el-menu-item v-for="(item, index) in projeckList" :key="index" :index="item.name">
+                        <el-menu-item v-for="(item, index) in projeckList" :key="index" :index="item.id">
                             <el-icon :size="20">
                                 <Notebook />
                             </el-icon>
@@ -145,7 +145,7 @@ const router = useRouter()
 const imageUrl = ref('')
 
 // 项目ID 传递给事项看板
-const projeckId = ref()
+const projeckId = ref('')
 
 // 是否选择项目 未选中展示空页
 const isCollapse = ref(false)
@@ -309,7 +309,6 @@ const handleSelect = (index: string) => {
             })
     } else {
         projeckId.value = index
-        console.log(`选择了 ${projeckId.value}`)
     }
 }
 
