@@ -669,6 +669,35 @@ const task = {
                 reject(err);
             });
         });
+    },
+
+    /**
+     * 发表评论
+     * 
+     * @param tid 任务id
+     * @param content 评论内容
+     */
+    comment: function(tid: number, content: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            axios(prefix + '/task/comment', {
+                method: 'POST',
+                headers: {
+                    'Authorization': '' + localStorage.getItem('token')
+                },
+                data: {
+                    tid: tid,
+                    content: content,
+                },
+            }).then(res => {
+                if (res.data.status === 0) {
+                    resolve(res.data.id);
+                } else {
+                    reject(res.data.message);
+                }
+            }).catch(err => {
+                reject(err);
+            });
+        });
     }
 }
 const EasyWorkAPI = {
