@@ -13,7 +13,7 @@
                 allowedDropEffect: 'move',
             })">
                 <Item v-for="(task, idx) in item.task" :key="task.id" :id="task.id" :title="task.name"
-                    :person="task.assignee" @click="taskId = task.id; drawerTask = true" :end="item.handle">
+                    :person="task.assignee" @click="taskId=task.id; drawerTask = true" :end="item.handle">
                 </Item>
             </Box>
         </div>
@@ -64,7 +64,7 @@
     </div>
 
     <!-- 事项详情 -->
-    <TaskInfoComponents :show="drawerTask" :task-id="taskId" :onClose="taskInfoDrawClose" />
+    <TaskInfoComponents :show="drawerTask" :taskId="taskId" :onClose="taskInfoDrawClose" />
     <!-- 新建任务 -->
     <NewTaskComponents :show="dialogNewTask" :onClose="newTaskInfoDrawClose" :create="createTask" />
     <!-- 添加成员 -->
@@ -125,6 +125,7 @@ const projeckInfo = ref<ProjectInfo>({
     create_time: '',
     deleted: 0
 });
+
 
 // 处理拖放
 const handleDrop = (item: any, monitor: any) => {

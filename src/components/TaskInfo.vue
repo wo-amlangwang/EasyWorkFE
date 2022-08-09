@@ -3,12 +3,17 @@
         style="max-width: 35vw;">
         <div class="task-detail">
             <div class="task-detail-title">
-                <h3 style="padding-left: 0;">事项标题: {{ taskInfo.name }}</h3>
+                <h3 style="padding-left: 0;">事项标题:
+                    <a>{{ taskInfo.name }}</a>
+                    <!-- <el-button text :icon="Edit" @click="editTitleEvent" /> -->
+                </h3>
+
             </div>
             <div class="task-detail-person">
                 <h4>责任人:</h4>
                 <!-- TODO -->
-                <Tags :tags="tags" :addTag="() => { }" showAddBtn :del-tag="(item) => { }" style="margin-left: 5px;" />
+                <Tags :tags="tags" :addTag="() => { }" :showAddBtn="false" :del-tag="(item) => { }"
+                    style="margin-left: 5px;" />
             </div>
             <div class="task-detail-content">
                 <h4>事项内容:</h4>
@@ -17,18 +22,15 @@
             <div class="task-detail-time">
                 <h4>事项时间:</h4>
                 <div>
-                    <div>
-                        <a>开始时间</a>
-                        <el-progress :text-inside="true" :stroke-width="24" :percentage="percentage"
-                            :status="timeStatus" />
-                        <a>结束时间</a>
-                    </div>
-                    <div>
-                        <el-date-picker v-model="taskInfo.create_time" type="datetime" placeholder="开始时间"
-                            :shortcuts="shortcuts" />
-                        <el-date-picker v-model="taskInfo.deadline" type="datetime" placeholder="结束时间"
+                    <div style="width: 100%; display: flex;">
+                        <el-date-picker style="flex: 1;" v-model="taskInfo.create_time" type="datetime"
+                            placeholder="开始时间" :shortcuts="shortcuts" />
+                        <el-date-picker style="flex: 1;" v-model="taskInfo.deadline" type="datetime" placeholder="结束时间"
                             :shortcuts="shortcuts" />
                     </div>
+
+                    <el-progress :stroke-width="24" :percentage="percentage" :status="timeStatus">
+                    </el-progress>
                 </div>
             </div>
             <el-timeline class="task-timeline">
@@ -53,9 +55,10 @@ import Tags from './Tags/Tags.vue';
 import type tag from './Tags/Tags-Type';
 import EasyWorkAPI from '@/utils/EasyWorkAPI';
 import type { TaskInfo, TimeLine } from '@/utils/Model';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import lodash from 'lodash';
 import { watch, ref } from 'vue';
+import { Edit } from '@element-plus/icons-vue';
 
 const props = defineProps<{
     show: boolean, // 是否显示
@@ -63,6 +66,24 @@ const props = defineProps<{
     onClose: (done: () => void) => void,
 }>()
 
+const edit_title = ref<HTMLInputElement | null>(null)
+const editTitleEvent = () => {
+    ElMessageBox.prompt('请输入任务名称', '更改任务名', {
+        inputValue: taskInfo.value.name,
+        confirmButtonText: '保存',
+        cancelButtonText: '取消',
+        inputPattern: /^[\u4e00-\u9fa5a-zA-Z0-9]{1,60}$/,
+        inputErrorMessage: '任务名称长度在1-60之间',
+    }).then(({ value }) => {
+        if (value) {
+            // 
+        }
+    }).catch(() => {
+        // cancel
+    })
+
+}
+const editTitle = ref(false), title = ref('')
 const content = ref<string>(''), percentage = ref(0)
 const taskTimeLine = ref<TimeLine[]>([]), taskInfo = ref<TaskInfo>({
     id: 0,
@@ -115,9 +136,9 @@ const shortcuts = [
 ]
 
 watch(
-    () => lodash.cloneDeep(props.taskId),
+    () => lodash.cloneDeep(props.show),
     (state, prevState) => {
-        if (state != 0) {
+        if (state && props.taskId != 0) {
             EasyWorkAPI.task.getInfo(props.taskId).then((res: any) => {
                 tags.value = res.assignee.map((item: any) => {
                     return {
@@ -209,4 +230,6 @@ watch(
     display: flex;
 
 }
+
+.task-detail .task-detail-time .time {}
 </style>
