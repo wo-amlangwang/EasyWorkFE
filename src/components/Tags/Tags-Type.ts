@@ -1,11 +1,6 @@
-
 // 标签结构信息
-interface tag {
+export default interface tag {
     id: number
     name: string,
     canDel: boolean
-}
-
-export type {
-    tag
 }

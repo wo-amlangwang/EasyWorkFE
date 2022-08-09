@@ -13,7 +13,7 @@
 </template>
 <script setup lang="ts">
 import { Plus, Close } from '@element-plus/icons-vue'
-import type { tag } from './tags-type'
+import type tag from './Tags-Type';
 
 const props = defineProps<{
     tags: tag[], // 标签列表
