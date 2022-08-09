@@ -178,6 +178,44 @@ const user = {
                 reject(err);
             });
         });
+    },
+
+    /**
+     * 查找用户
+     * 
+     * @param keyword 关键词
+     * @return 用户列表
+     */
+    search: function(keyword: string): Promise<UserInfo[]> {
+        return new Promise((resolve, reject) => {
+            axios(prefix + '/my/getlikeuser', {
+                method: 'POST',
+                headers: {
+                    'Authorization': '' + localStorage.getItem('token')
+                },
+                data: {
+                    likename: keyword
+                }
+            }).then(res => {
+                if (res.data.status === 0) {
+                    let users: UserInfo[] = new Array(res.data.data.length);
+                    res.data.data.forEach((user: any, index: number) => {
+                        users[index] = {
+                            id: user.id,
+                            username: '',
+                            nickname: user.username,
+                            email: '',
+                            user_pic: user.user_pic
+                        }
+                    }),
+                    resolve(users);
+                } else {
+                    reject(res.data.message);
+                }
+            }).catch(err => {
+                reject(err);
+            });
+        });
     }
 };
 
@@ -370,7 +408,7 @@ const project = {
      * 
      * @param pid 项目ID
      */
-    getMembers: (pid: number): Promise<string | string[]> => {
+    getMembers: (pid: number): Promise<UserInfo[]> => {
         return new Promise((resolve, reject) => {
             axios(prefix + '/project/projectmemberlist', {
                 method: 'POST',
@@ -422,7 +460,7 @@ const project = {
                             update_time: item.update_time,
                             priority: item.priority,
                             deadline: item.deadline,
-                            assignee: [item.members],
+                            assignee: [item.assignee],
                             status: item.status,
                             task_comment: item.task_comment,
                             deleted: item.deleted,
