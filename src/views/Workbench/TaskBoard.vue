@@ -18,29 +18,48 @@
             </Box>
         </div>
         <div class="project-info">
-            <h2><a style="color: #cccccc; margin-right: .2em;">
-                    {{ '#' + projeckInfo.id }}</a>项目详情
-                <el-button text :icon="Delete" @click="deleteProject" />
-            </h2>
-            <h3>
-                项目标题
-                <el-button text :icon="Edit" @click="editProjectName" />
-            </h3>
-            <a>{{ projeckInfo.name }}</a>
-            <h3>创建者</h3>
-            <span>{{ projeckInfo.master }}</span>
-            <h3>创建时间</h3>
-            <a>{{ projeckInfo.create_time }}</a>
-            <h3>
-                说明
-                <el-button text :icon="Edit" @click="editProjectDetails" />
-            </h3>
-            <p>{{ projeckInfo.details }}</p>
-            <!--        
-            -->
-            <el-button style="width: 100%;" @click="dialogNewTask = true">
-                创建任务
-            </el-button>
+            <div class="head">
+                <h2><a style="color: #cccccc; margin-right: .2em;">
+                        {{ '#' + projeckInfo.id }}</a>项目详情
+                    <el-button text :icon="Delete" @click="deleteProject" />
+                </h2>
+            </div>
+            <div class="body">
+                <div class="item">
+                    <h3>
+                        项目名
+                        <el-button text :icon="Edit" @click="editProjectName" />
+                    </h3>
+                    <a>
+                        {{ projeckInfo.name }}
+                    </a>
+                </div>
+                <div class="item">
+                    <h3>创建者</h3>
+                    <span>{{ projeckInfo.master }}</span>
+                </div>
+                <div class="item">
+                    <h3>创建时间</h3>
+                    <a>{{ projeckInfo.create_time }}</a>
+                </div>
+                <div class="item">
+                    <h3>
+                        说明
+                        <el-button text :icon="Edit" @click="editProjectDetails" />
+                    </h3>
+                    <p>{{ projeckInfo.details }}</p>
+                </div>
+                <div class="item">
+                    <h3>
+                        项目成员
+                    </h3>
+                    <Tags :tags="projectMember" :addTag="() => { dialogAddMember = true }" :del-tag="delTag"
+                        :showAddBtn='true' style="margin-left: 5px;" />
+                </div>
+                <el-button style="width: 100%;" @click="dialogNewTask = true">
+                    创建任务
+                </el-button>
+            </div>
         </div>
     </div>
 
@@ -54,7 +73,7 @@
             <div class="task-detail-person">
                 <h4>责任人:</h4>
                 <!-- TODO -->
-                <Tags :tags="tags" :addTag="addTag" :del-tag="delTag" style="margin-left: 5px;" />
+                <Tags :tags="tags" :addTag="() => { }" showAddBtn :del-tag="delTag" style="margin-left: 5px;" />
             </div>
             <div class="task-detail-content">
                 <h4>事项内容:</h4>
@@ -62,7 +81,6 @@
             </div>
             <div class="task-detail-time">
                 <h4>事项时间:</h4>
-
                 <div>
                     <div>
                         <a>开始时间</a>
@@ -119,6 +137,8 @@
             </span>
         </template>
     </el-dialog>
+    <!-- 添加成员 -->
+    <AddMember :show="dialogAddMember" :cancel="() => { dialogAddMember = false; }" :done="projectAddMembers" />
 </template>
 <script setup lang="ts">
 import lodash from 'lodash';
@@ -126,15 +146,14 @@ import { watch, ref } from 'vue';
 import Item from '@/components/Item.vue';
 import Box from '@/components/Box.vue';
 import Tags from '../../components/Tages/Tags.vue';
-import { Plus, Edit, Delete } from '@element-plus/icons-vue';
+import { Edit, Delete } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
 import type { tag } from "@/components/Tages/tags-type";
-import type { TaskInfo, TimeLine, ProjectInfo } from '@/utils/Model';
+import type { TaskInfo, TimeLine, ProjectInfo, UserInfo } from '@/utils/Model';
 import EasyWorkAPI from '@/utils/EasyWorkAPI';
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
-const router = useRouter()
-
+import AddMember from './project/AddMember.vue';
+import NewTask from './project/NewTask.vue';
 // 事项列表
 interface TaskList {
     title: string
@@ -158,8 +177,11 @@ const props = defineProps<{
 // 是否展示事项详情面板
 const drawerTask = ref(false)
 const dialogNewTask = ref(false)
+const dialogAddMember = ref(false)
 const timeStatus = ref('')
 
+// 项目用户列表
+const projectMember = ref<tag[]>([])
 
 // 项目详情
 const projeckInfo = ref<ProjectInfo>({
@@ -204,10 +226,6 @@ const handleDrop = (item: any, monitor: any) => {
             EasyWorkAPI.task.updateStatus(Number(props.projeckId), item.name, Number(dropResult.name));
         }
     })
-    // const { name } = item
-    // droppedBoxNames.value.push(name)
-    // console.log(name)
-    // this.appendChild(document.getElementById('item-' + name))
 }
 
 const loading = ref(false)
@@ -228,6 +246,7 @@ const taskInfo = ref<TaskInfo>({
     deleted: 0,
     time_line: []
 })
+
 const tags = ref<tag[]>([])
 const taskTimeLine = ref<TimeLine[]>([])
 const content = ref(''), percentage = ref(0)
@@ -309,6 +328,8 @@ const createTask = () => {
         ElMessage.success('创建成功')
         taskList.value[0].task.push(newTaskInfo.value);
         taskMap.set(res, 0);
+    }).catch(res => {
+        ElMessage.error('创建失败: ' + res)
     })
 }
 
@@ -330,6 +351,39 @@ const editProjectDetails = () => {
             ElMessage.error(res)
         }
         console.log(res)
+    })
+};
+
+
+const projectAddMembers = (value: string[]) => {
+    console.log(value);
+    dialogAddMember.value = false;
+    let addTask: Promise<string>[] = [];
+    value.forEach(item => {
+        addTask.push(EasyWorkAPI.project.addMember(projeckInfo.value.id, Number(item.split(':')[0])));
+    })
+    Promise.all(addTask).then(res => {
+        refreshProjectMember();
+        ElMessage.success('添加成功')
+    }
+    ).catch(res => {
+        ElMessage.error(res)
+    })
+}
+
+// 刷新项目成员
+const refreshProjectMember = () => {
+    let cd = projeckInfo.value.master === localStorage.getItem('username');
+    EasyWorkAPI.project.getMembers(Number(props.projeckId)).then(res => {
+        projectMember.value = res.map((item: any) => {
+            return {
+                id: item.id,
+                name: item.name,
+                canDel: cd
+            }
+        })
+    }).catch(err => {
+        ElMessage.error(err)
     })
 };
 
@@ -369,24 +423,6 @@ const deleteProject = () => {
             ElMessage.error(res)
         }
         console.log(res)
-    })
-}
-
-
-// 添加负责人回调事件
-const addTag = () => {
-    console.log(123);
-    ElMessageBox.prompt('请输入用户名/ID', '添加责任人', {
-        inputPattern: /^[a-zA-Z0-9\u4e00-\u9fa5]{1,10}$/,
-        inputErrorMessage: '用户名/ID只能为1-10位中文、英文、数字'
-    }).then(({ value }) => {
-        if (value) {
-            // taskInfo.value?.assignee.push({
-            //     id: taskInfo.value?.assignee.length + 1,
-            //     name: value
-            // })
-            taskInfo.value?.assignee.push(value)
-        }
     })
 }
 
@@ -501,6 +537,7 @@ watch(
                 status: 2
             }
         ];
+        let cd = false;
         EasyWorkAPI.project.getTaskList(Number(props.projeckId)).then(res => {
             res.forEach(item => {
                 taskList.value[item.status].task
@@ -510,6 +547,16 @@ watch(
             return EasyWorkAPI.project.getInfo(Number(props.projeckId));
         }).then(res => {
             projeckInfo.value = res;
+            cd = projeckInfo.value.master === localStorage.getItem('username');
+            return EasyWorkAPI.project.getMembers(Number(props.projeckId));
+        }).then(res => {
+            projectMember.value = res.map((item: any) => {
+                return {
+                    id: item.id,
+                    name: item.name,
+                    canDel: cd
+                }
+            })
         }).catch(err => {
             console.log(err)
         })
@@ -535,6 +582,29 @@ watch(
     box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.1);
     border: 1px solid #ccc;
 
+}
+
+.project-info .head {
+    padding: 10px 5px 0 5px;
+}
+
+.project-info .body {
+    padding: 5px 5px 10px 5px;
+}
+
+.project-info .head h2 {
+    padding-left: 0;
+    font-size: 1em;
+}
+
+.project-info .item {
+    margin-bottom: .5em;
+}
+
+.project-info .item h3 {
+    padding-left: 0;
+    padding-bottom: 0;
+    font-size: 1.4em;
 }
 
 .dialog-item {
