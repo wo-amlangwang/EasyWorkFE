@@ -13,7 +13,7 @@
                 allowedDropEffect: 'move',
             })">
                 <Item v-for="(task, idx) in item.task" :key="task.id" :id="task.id" :title="task.name"
-                    :person="task.assignee" @click="itemClick(task.id)" :end="item.handle">
+                    :person="task.assignee" @click="taskId = task.id; drawerTask = true" :end="item.handle">
                 </Item>
             </Box>
         </div>
@@ -64,54 +64,7 @@
     </div>
 
     <!-- 事项详情 -->
-    <el-drawer v-model="drawerTask" :title="'#' + taskInfo.id" :size="'45%'" :direction="'rtl'"
-        :before-close="handleClose" style="max-width: 35vw;">
-        <div class="task-detail">
-            <div class="task-detail-title">
-                <h3 style="padding-left: 0;">事项标题: {{ taskInfo.name }}</h3>
-            </div>
-            <div class="task-detail-person">
-                <h4>责任人:</h4>
-                <!-- TODO -->
-                <Tags :tags="tags" :addTag="() => { }" showAddBtn :del-tag="delTag" style="margin-left: 5px;" />
-            </div>
-            <div class="task-detail-content">
-                <h4>事项内容:</h4>
-                <el-input type="textarea" :resize="'none'" :rows="10" v-model="content" placeholder="请输入事项内容" />
-            </div>
-            <div class="task-detail-time">
-                <h4>事项时间:</h4>
-                <div>
-                    <div>
-                        <a>开始时间</a>
-                        <el-progress :text-inside="true" :stroke-width="24" :percentage="percentage"
-                            :status="timeStatus" />
-                        <a>结束时间</a>
-                    </div>
-                    <div>
-                        <el-date-picker v-model="taskInfo.create_time" type="datetime" placeholder="开始时间"
-                            :shortcuts="shortcuts" />
-                        <el-date-picker v-model="taskInfo.deadline" type="datetime" placeholder="结束时间"
-                            :shortcuts="shortcuts" />
-                    </div>
-                </div>
-            </div>
-            <el-timeline class="task-timeline">
-                <el-timeline-item v-for="(item, key) in taskTimeLine" :timestamp="item.time" placement="top">
-                    <el-card>
-                        {{ item.details }}
-                    </el-card>
-                </el-timeline-item>
-            </el-timeline>
-            <div class="task-detail-content">
-                <h4>评论</h4>
-                <el-input type="textarea" :resize="'none'" :rows="10" placeholder="请输入评论内容" />
-                <el-button class="btn task-save">
-                    发送
-                </el-button>
-            </div>
-        </div>
-    </el-drawer>
+    <TaskInfoComponents :show="drawerTask" :task-id="taskId" :onClose="taskInfoDrawClose" />
     <!-- 新建任务 -->
     <el-dialog v-model="dialogNewTask" title="新建任务" width="30%" class="dialog-card">
         <div>
@@ -145,15 +98,16 @@ import lodash from 'lodash';
 import { watch, ref } from 'vue';
 import Item from '@/components/Item.vue';
 import Box from '@/components/Box.vue';
-import Tags from '../../components/Tages/Tags.vue';
+import Tags from '@/components/Tags/Tags.vue';
 import { Edit, Delete } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
-import type { tag } from "@/components/Tages/tags-type";
+import type tag from "@/components/Tags/Tags-Type";
 import type { TaskInfo, TimeLine, ProjectInfo, UserInfo } from '@/utils/Model';
 import EasyWorkAPI from '@/utils/EasyWorkAPI';
 import { ElMessage } from 'element-plus'
-import AddMember from './project/AddMember.vue';
-import NewTask from './project/NewTask.vue';
+import AddMember from '../../components/AddMember.vue';
+import NewTask from '../../components/NewTask.vue';
+import TaskInfoComponents from '../../components/TaskInfo.vue';
 // 事项列表
 interface TaskList {
     title: string
@@ -178,7 +132,8 @@ const props = defineProps<{
 const drawerTask = ref(false)
 const dialogNewTask = ref(false)
 const dialogAddMember = ref(false)
-const timeStatus = ref('')
+
+const taskId = ref(0)
 
 // 项目用户列表
 const projectMember = ref<tag[]>([])
@@ -192,7 +147,36 @@ const projeckInfo = ref<ProjectInfo>({
     create_time: '',
     deleted: 0
 });
-
+const shortcuts = [
+    {
+        text: '今天',
+        value: new Date(),
+    },
+    {
+        text: '明天',
+        value: () => {
+            const date = new Date()
+            date.setTime(date.getTime() + 3600 * 1000 * 24)
+            return date
+        },
+    },
+    {
+        text: '一周后',
+        value: () => {
+            const date = new Date()
+            date.setTime(date.getTime() + 3600 * 1000 * 24 * 7)
+            return date
+        },
+    },
+    {
+        text: '一个月后',
+        value: () => {
+            const date = new Date()
+            date.setMonth(date.getMonth() + 1)
+            return date
+        },
+    },
+]
 // 新建任务信息
 const newTaskInfo = ref<TaskInfo>({
     id: 0,
@@ -248,7 +232,6 @@ const taskInfo = ref<TaskInfo>({
 })
 
 const tags = ref<tag[]>([])
-const taskTimeLine = ref<TimeLine[]>([])
 const content = ref(''), percentage = ref(0)
 
 const taskList = ref<TaskList[]>([
@@ -276,37 +259,6 @@ const taskList = ref<TaskList[]>([
 ]);
 
 const taskMap = new Map();
-
-const shortcuts = [
-    {
-        text: '今天',
-        value: new Date(),
-    },
-    {
-        text: '明天',
-        value: () => {
-            const date = new Date()
-            date.setTime(date.getTime() + 3600 * 1000 * 24)
-            return date
-        },
-    },
-    {
-        text: '一周后',
-        value: () => {
-            const date = new Date()
-            date.setTime(date.getTime() + 3600 * 1000 * 24 * 7)
-            return date
-        },
-    },
-    {
-        text: '一个月后',
-        value: () => {
-            const date = new Date()
-            date.setMonth(date.getMonth() + 1)
-            return date
-        },
-    },
-]
 // 事项时间轴demo
 // taskTimeLine.value = [
 //     {
@@ -428,45 +380,6 @@ const deleteProject = () => {
 
 // 点击事项弹出详情面板
 const itemClick = (id: number) => {
-    EasyWorkAPI.task.getInfo(id).then((res: any) => {
-        if (typeof res === 'object') {
-            tags.value = res.assignee.map((item: any) => {
-                return {
-                    id: 1,
-                    name: item
-                }
-            });
-            content.value = res.details;
-            taskInfo.value = res;
-
-            // 计算时间进度
-            let start = new Date(res.create_time),
-                now = new Date(),
-                end = new Date(res.deadline);
-            let time = end.getTime() - start.getTime();
-            let nowTime = now.getTime() - start.getTime();
-            percentage.value = Math.floor(nowTime / time * 100);
-
-            if (taskInfo.value.status !== 2) {
-                if (percentage.value >= 100) {
-                    timeStatus.value = 'exception';
-                } else if (percentage.value >= 75) {
-                    timeStatus.value = 'exception';
-                } else if (percentage.value >= 50) {
-                    timeStatus.value = 'warning';
-                } else {
-                    timeStatus.value = '';
-                }
-            } else {
-                timeStatus.value = 'success';
-            }
-
-            console.log(res);
-            drawerTask.value = true;
-        }
-    }).catch((err: any) => {
-        ElMessage.error(err)
-    })
 
 }
 
@@ -491,8 +404,7 @@ const remoteMethod = (query: string) => {
 }
 
 // 关闭事项详情弹窗确认 可以在这里做保存操作
-const handleClose = (done: () => void) => {
-    console.log('保存事项');
+const taskInfoDrawClose = (done: () => void) => {
     done();
 }
 
@@ -617,57 +529,5 @@ h3 {
 
 .el-drawer__header {
     margin-bottom: 0;
-}
-
-.task-list {
-    display: flex;
-    flex-direction: column;
-    min-height: 3em;
-    height: 100%;
-    width: 320px;
-    padding: 1px 13px 10px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.1);
-    margin-right: 15px;
-}
-
-.task-list.list-add {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 4px dashed #ccc;
-    background-color: #eee;
-}
-
-.task-list.list-add:hover {
-    cursor: pointer;
-}
-
-.task-detail {
-    display: flex;
-    flex-direction: column;
-    overflow: auto;
-}
-
-.task-detail>* {
-    padding-bottom: 10px;
-}
-
-.btn.task-save {
-    /* position: relative; */
-    margin-top: 10px;
-    float: right;
-}
-
-.task-detail .task-timeline {
-    max-height: 35vh;
-    overflow: auto;
-}
-
-.task-detail .task-detail-person {
-    display: flex;
-
 }
 </style>
