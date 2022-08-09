@@ -1,12 +1,12 @@
 <template>
     <div class="tags">
-        <span class="item" v-for="(item, key) in tags" :key="key">
+        <span class="tags-item" v-for="(item, key) in tags" :key="key">
             {{ item.name }}
-            <el-icon class="item-del" @click="delTagHandler(key)">
+            <el-icon class="tags-item-del" @click="delTag(item)" v-show="item.canDel">
                 <Close />
             </el-icon>
         </span>
-        <el-icon class="item-add" @click="addTag">
+        <el-icon class="tags-item-add" @click="addTag()" v-show="showAddBtn">
             <Plus />
         </el-icon>
     </div>
@@ -15,18 +15,15 @@
 import { Plus, Close } from '@element-plus/icons-vue'
 import type { tag } from './tags-type'
 
-const props = defineProps<{ 
+const props = defineProps<{
     tags: tag[], // 标签列表
+    showAddBtn: boolean, // 是否显示添加按钮
     addTag: () => void // 添加标签回调函数
     delTag: (item: tag) => void // 删除标签回调函数
 }>()
 
 const addTag = props.addTag
-
-// 删除标签处理函数
-const delTagHandler = (item: number) => {
-    props.delTag(props.tags[item])
-}
+const delTag = props.delTag
 </script>
 <style>
 .tags {
@@ -38,8 +35,9 @@ const delTagHandler = (item: number) => {
     margin: 0;
 }
 
-.tags .item {
+.tags .tags-item {
     line-height: 1.5em;
+    margin: 3px;
     padding-left: 6px;
     padding-right: 7px;
     margin-right: 3px;
@@ -47,21 +45,24 @@ const delTagHandler = (item: number) => {
     border-radius: 4px;
     display: flex;
     align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.tags .item-del:hover {
+.tags .tags-item-del:hover {
     color: red;
     transition: color .3s;
 }
 
-.tags .item-del {
+.tags .tags-item-del {
     cursor: pointer;
     margin-left: 5px;
     color: #000;
     transition: color .3s;
 }
 
-.tags .item-add {
+.tags .tags-item-add {
     cursor: pointer;
 }
 </style>
