@@ -66,30 +66,7 @@
     <!-- 事项详情 -->
     <TaskInfoComponents :show="drawerTask" :task-id="taskId" :onClose="taskInfoDrawClose" />
     <!-- 新建任务 -->
-    <el-dialog v-model="dialogNewTask" title="新建任务" width="30%" class="dialog-card">
-        <div>
-            <div class="dialog-item">
-                任务标题:
-                <el-input v-model="newTaskInfo.name" placeholder="请输入任务名" />
-            </div>
-            <div class="dialog-item">
-                任务说明:
-                <el-input type="textarea" :resize="'none'" :rows="4" v-model="newTaskInfo.details"
-                    placeholder="请输入任务内容" />
-            </div>
-            <div class="dialog-item">
-                截至时间:
-                <el-date-picker v-model="newTaskInfo.deadline" type="datetime" placeholder="截止时间"
-                    :shortcuts="shortcuts" />
-            </div>
-        </div>
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button @click="dialogNewTask = false">取消</el-button>
-                <el-button type="primary" @click="dialogNewTask = false; createTask()">创建</el-button>
-            </span>
-        </template>
-    </el-dialog>
+    <NewTaskComponents :show="dialogNewTask" :onClose="newTaskInfoDrawClose" :create="createTask" />
     <!-- 添加成员 -->
     <AddMember :show="dialogAddMember" :cancel="() => { dialogAddMember = false; }" :done="projectAddMembers" />
 </template>
@@ -105,9 +82,10 @@ import type tag from "@/components/Tags/Tags-Type";
 import type { TaskInfo, TimeLine, ProjectInfo, UserInfo } from '@/utils/Model';
 import EasyWorkAPI from '@/utils/EasyWorkAPI';
 import { ElMessage } from 'element-plus'
-import AddMember from '../../components/AddMember.vue';
-import NewTask from '../../components/NewTask.vue';
-import TaskInfoComponents from '../../components/TaskInfo.vue';
+import AddMember from '@/components/AddMember.vue';
+import TaskInfoComponents from '@/components/TaskInfo.vue';
+import NewTaskComponents from '@/components/NewTask.vue';
+
 // 事项列表
 interface TaskList {
     title: string
@@ -147,54 +125,6 @@ const projeckInfo = ref<ProjectInfo>({
     create_time: '',
     deleted: 0
 });
-const shortcuts = [
-    {
-        text: '今天',
-        value: new Date(),
-    },
-    {
-        text: '明天',
-        value: () => {
-            const date = new Date()
-            date.setTime(date.getTime() + 3600 * 1000 * 24)
-            return date
-        },
-    },
-    {
-        text: '一周后',
-        value: () => {
-            const date = new Date()
-            date.setTime(date.getTime() + 3600 * 1000 * 24 * 7)
-            return date
-        },
-    },
-    {
-        text: '一个月后',
-        value: () => {
-            const date = new Date()
-            date.setMonth(date.getMonth() + 1)
-            return date
-        },
-    },
-]
-// 新建任务信息
-const newTaskInfo = ref<TaskInfo>({
-    id: 0,
-    name: '',
-    details: '',
-    priority: 0,
-    type: 0,
-    create_user: '',
-    create_time: '',
-    update_user: '',
-    update_time: '',
-    deadline: '',
-    assignee: [],
-    status: 0,
-    task_comment: '',
-    deleted: 0,
-    time_line: []
-})
 
 // 处理拖放
 const handleDrop = (item: any, monitor: any) => {
@@ -213,26 +143,6 @@ const handleDrop = (item: any, monitor: any) => {
 }
 
 const loading = ref(false)
-const taskInfo = ref<TaskInfo>({
-    id: 0,
-    name: '',
-    details: '',
-    type: 0,
-    create_user: '',
-    update_user: '',
-    priority: 0,
-    create_time: '',
-    update_time: '',
-    deadline: '',
-    assignee: [],
-    status: 0,
-    task_comment: '',
-    deleted: 0,
-    time_line: []
-})
-
-const tags = ref<tag[]>([])
-const content = ref(''), percentage = ref(0)
 
 const taskList = ref<TaskList[]>([
     {
@@ -259,30 +169,18 @@ const taskList = ref<TaskList[]>([
 ]);
 
 const taskMap = new Map();
-// 事项时间轴demo
-// taskTimeLine.value = [
-//     {
-//         type: 1,
-//         time: "2018/4/12 20:46",
-//         details: "张三 创建了任务"
-//     },
-//     {
-//         type: 2,
-//         time: "2018/4/12 20:46",
-//         details: "李四: 该需求需要进一步评估"
-//     }
-// ]
 
 // 新建任务
-const createTask = () => {
-    newTaskInfo.value.assignee = ['' + localStorage.getItem('username')]
-    EasyWorkAPI.task.craete(Number(props.projeckId), newTaskInfo.value).then(res => {
+const createTask = (info: TaskInfo) => {
+    info.assignee = ['' + localStorage.getItem('username')]
+    EasyWorkAPI.task.craete(Number(props.projeckId), info).then(res => {
         ElMessage.success('创建成功')
-        taskList.value[0].task.push(newTaskInfo.value);
+        taskList.value[0].task.push(info);
         taskMap.set(res, 0);
     }).catch(res => {
         ElMessage.error('创建失败: ' + res)
     })
+    dialogNewTask.value = false;
 }
 
 // 修改项目说明
@@ -378,29 +276,9 @@ const deleteProject = () => {
     })
 }
 
-// 点击事项弹出详情面板
-const itemClick = (id: number) => {
-
-}
-
 // 删除负责人回调事件
 const delTag = (item: any) => {
     console.log(item);
-}
-
-// 远程用户列表
-const remoteMethod = (query: string) => {
-    if (query) {
-        loading.value = true
-        setTimeout(() => {
-            loading.value = false
-            // persons.value = list.value.filter((item) => {
-            //     return item.label.toLowerCase().includes(query.toLowerCase())
-            // })
-        }, 200)
-    } else {
-        // persons.value = []
-    }
 }
 
 // 关闭事项详情弹窗确认 可以在这里做保存操作
@@ -408,16 +286,10 @@ const taskInfoDrawClose = (done: () => void) => {
     done();
 }
 
-
-// 添加事项列表
-const addList = () => {
-    taskList.value.push({
-        title: 'TODO',
-        access: ['item'],
-        handle: handleDrop,
-        task: [],
-        status: -1
-    });
+// 关闭新建任务弹窗确认 可以在这里做保存操作
+const newTaskInfoDrawClose = (done: () => void) => {
+    dialogNewTask.value = false;
+    done();
 }
 
 // 事项ID变化监视
