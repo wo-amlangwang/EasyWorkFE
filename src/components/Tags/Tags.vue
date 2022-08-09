@@ -2,11 +2,11 @@
     <div class="tags">
         <span class="tags-item" v-for="(item, key) in tags" :key="key">
             {{ item.name }}
-            <el-icon class="tags-item-del" @click="delTag(item)" v-show="item.canDel">
+            <el-icon class="tags-item-del" @click="delTag(item)" v-if="item.canDel">
                 <Close />
             </el-icon>
         </span>
-        <el-icon class="tags-item-add" @click="addTag()" v-show="showAddBtn">
+        <el-icon class="tags-item-add" @click="addTag()" v-if="showAddBtn">
             <Plus />
         </el-icon>
     </div>
