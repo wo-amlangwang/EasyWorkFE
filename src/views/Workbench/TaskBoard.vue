@@ -53,8 +53,21 @@
                     <h3>
                         项目成员
                     </h3>
-                    <Tags :tags="projectMember" :addTag="() => { dialogAddMember = true }" :del-tag="delTag"
-                        :showAddBtn='true' style="margin-left: 5px;" />
+                    <!-- <Tags :tags="projectMember" :addTag="() => { dialogAddMember = true }" :del-tag="delTag"
+                        :showAddBtn='true' style="margin-left: 5px;" /> -->
+                    <el-tag
+                        v-for="tag in projectMember"
+                        :key="tag"
+                        class="tag-m3"
+                        closable
+                        :disable-transitions="false"
+                        @close="delTag(tag)"
+                    >
+                        {{ tag.nickname }}
+                    </el-tag>
+                    <el-button class="tag-m3" size="small" @click="() => { dialogAddMember = true }">
+                        添加成员
+                    </el-button>
                 </div>
                 <el-button style="width: 100%;" @click="dialogNewTask = true">
                     创建任务
@@ -64,7 +77,7 @@
     </div>
 
     <!-- 事项详情 -->
-    <TaskInfoComponents :show="drawerTask" :taskId="taskId" :onClose="taskInfoDrawClose" />
+    <TaskInfoComponents :show="drawerTask" :taskId="taskId" :onClose="taskInfoDrawClose" :members="projectMember" />
     <!-- 新建任务 -->
     <NewTaskComponents :show="dialogNewTask" :onClose="newTaskInfoDrawClose" :create="createTask" />
     <!-- 添加成员 -->
@@ -75,16 +88,14 @@ import lodash from 'lodash';
 import { watch, ref } from 'vue';
 import Item from '@/components/Item.vue';
 import Box from '@/components/Box.vue';
-import Tags from '@/components/Tags/Tags.vue';
 import { Edit, Delete } from '@element-plus/icons-vue';
 import { ElMessageBox } from 'element-plus';
-import type tag from "@/components/Tags/Tags-Type";
-import type { TaskInfo, TimeLine, ProjectInfo, UserInfo } from '@/utils/Model';
+import type { TaskInfo, ProjectInfo, UserInfo } from '@/utils/Model';
 import EasyWorkAPI from '@/utils/EasyWorkAPI';
 import { ElMessage } from 'element-plus'
-import AddMember from '@/components/AddMember.vue';
-import TaskInfoComponents from '@/components/TaskInfo.vue';
-import NewTaskComponents from '@/components/NewTask.vue';
+import AddMember from './AddMember.vue';
+import TaskInfoComponents from './TaskInfo.vue';
+import NewTaskComponents from './NewTask.vue';
 
 // 事项列表
 interface TaskList {
@@ -110,11 +121,12 @@ const props = defineProps<{
 const drawerTask = ref(false)
 const dialogNewTask = ref(false)
 const dialogAddMember = ref(false)
+const inputAddTagVisible = ref(false)
 
 const taskId = ref(0)
 
 // 项目用户列表
-const projectMember = ref<tag[]>([])
+const projectMember = ref<UserInfo[]>([])
 
 // 项目详情
 const projeckInfo = ref<ProjectInfo>({
@@ -226,13 +238,7 @@ const projectAddMembers = (value: string[]) => {
 const refreshProjectMember = () => {
     let cd = projeckInfo.value.master === localStorage.getItem('username');
     EasyWorkAPI.project.getMembers(Number(props.projeckId)).then(res => {
-        projectMember.value = res.map((item: any) => {
-            return {
-                id: item.id,
-                name: item.name,
-                canDel: cd
-            }
-        })
+        projectMember.value = res
     }).catch(err => {
         ElMessage.error(err)
     })
@@ -284,6 +290,7 @@ const delTag = (item: any) => {
 
 // 关闭事项详情弹窗确认 可以在这里做保存操作
 const taskInfoDrawClose = (done: () => void) => {
+    drawerTask.value = false;
     done();
 }
 
@@ -335,13 +342,8 @@ watch(
             cd = projeckInfo.value.master === localStorage.getItem('username');
             return EasyWorkAPI.project.getMembers(Number(props.projeckId));
         }).then(res => {
-            projectMember.value = res.map((item: any) => {
-                return {
-                    id: item.id,
-                    name: item.name,
-                    canDel: cd
-                }
-            })
+            console.log(res)
+            projectMember.value = res
         }).catch(err => {
             console.log(err)
         })
@@ -402,5 +404,10 @@ h3 {
 
 .el-drawer__header {
     margin-bottom: 0;
+}
+
+.tag-m3 {
+    margin: 3px;
+    margin-left: 0;
 }
 </style>

@@ -653,7 +653,7 @@ const task = {
                 },
             }).then(res => {
                 if (res.data.status === 0) {
-                    let item = res.data.data[0];
+                    const item = res.data.data;
                     const ret: TaskInfo = {
                         id: item.id,
                         name: item.task_name,
@@ -681,6 +681,39 @@ const task = {
         });
     },
 
+    /**
+     * 更新任务信息
+     * 
+     * @param task 任务信息
+     */
+    update: function(task: TaskInfo): Promise<string> {
+        return new Promise((resolve, reject) => {
+            axios(prefix + '/task/updatetask', {
+                method: 'POST',
+                headers: {
+                    'Authorization': '' + localStorage.getItem('token')
+                },
+                data: {
+                    id: task.id,
+                    task_name: task.name,
+                    task_details: task.details,
+                    type: task.type,
+                    priority: task.priority,
+                    deadline: task.deadline,
+                    assignee: task.assignee[0],
+                    status: task.status
+                },
+            }).then(res => {
+                if (res.data.status === 0) {
+                    resolve(res.data.message);
+                } else {
+                    reject(res.data.message);
+                }
+            }).catch(err => {
+                reject(err);
+            });
+        });
+    },
     /**
      * 发表评论
      * 
