@@ -188,6 +188,7 @@ const createTask = (info: TaskInfo) => {
     info.assignee = ['' + localStorage.getItem('username')]
     EasyWorkAPI.task.craete(Number(props.projeckId), info).then(res => {
         ElMessage.success('创建成功')
+        info.id = res
         taskList.value[0].task.push(info);
         taskMap.set(res, 0);
     }).catch(res => {

@@ -495,7 +495,7 @@ const task = {
      * @param pid 项目ID
      * @param info 任务信息
      */
-    craete: (pid: number, info: TaskInfo): Promise<string> => {
+    craete: (pid: number, info: TaskInfo): Promise<number> => {
         const tn = new Date(info.deadline)
         const t = tn.getFullYear().toString().padStart(2, '0') + '-' +
             (tn.getMonth() + 1).toString().padStart(2, '0') + '-' +
