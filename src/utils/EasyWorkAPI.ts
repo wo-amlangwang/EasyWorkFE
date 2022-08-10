@@ -420,7 +420,17 @@ const project = {
                 }
             }).then(res => {
                 if (res.data.status == 0) {
-                    resolve(res.data.data);
+                    let ret: UserInfo[] = new Array();
+                    ret = res.data.data.map((item: any) => {
+                        return {
+                            id: item.id,
+                            username: '',
+                            nickname: item.name,
+                            email: '',
+                            user_pic: '',
+                        }
+                    });
+                    resolve(ret);
                 } else {
                     reject(res.data.message);
                 }
@@ -631,7 +641,7 @@ const task = {
      * 
      * @param id 任务id
      */
-    getInfo: (id: number): Promise<string | TaskInfo> => {
+    getInfo: (id: number): Promise<TaskInfo> => {
         return new Promise((resolve, reject) => {
             axios(prefix + '/task/gettask', {
                 method: 'POST',
@@ -677,7 +687,7 @@ const task = {
      * @param tid 任务id
      * @param content 评论内容
      */
-    comment: function(tid: number, content: string): Promise<string> {
+    comment: function(tid: number, content: string): Promise<number> {
         return new Promise((resolve, reject) => {
             axios(prefix + '/task/comment', {
                 method: 'POST',
@@ -691,6 +701,46 @@ const task = {
             }).then(res => {
                 if (res.data.status === 0) {
                     resolve(res.data.id);
+                } else {
+                    reject(res.data.message);
+                }
+            }).catch(err => {
+                reject(err);
+            });
+        });
+    },
+
+    /**
+     * 获取任务时间线
+     * 
+     * @param tid 任务id
+     */
+    getTimeLine: function(tid: number): Promise<TimeLine[]> {
+        return new Promise((resolve, reject) => {
+            axios(prefix + '/task/timeline/' + tid, {
+                method: 'GET',
+                headers: {
+                    'Authorization': '' + localStorage.getItem('token')
+                }
+            }).then(res => {
+                if (res.data.status === 0) {
+                    let ret: TimeLine[] = new Array();
+                    const data = res.data.data;
+                    // id: number // 时间线ID
+                    // type: number // 事件类型
+                    // user: string // 事件发生者
+                    // time: string // 事件发生时间
+                    // details: string // 事件详情
+                    ret = data.map((item: any) => {
+                        return {
+                            id: item.time_line_id,
+                            type: item.type,
+                            user: item.nickname,
+                            time: item.create_time,
+                            details: item.content
+                        }
+                    });
+                    resolve(ret);
                 } else {
                     reject(res.data.message);
                 }
