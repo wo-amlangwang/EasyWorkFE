@@ -26,12 +26,13 @@ const name = ref(''), password = ref(''), veify = ref(''),
 
 const login = () => {
     loading.value = true;
-    EasyWorkAPI.login(name.value, password.value, '')
+    EasyWorkAPI.user.login(name.value, password.value, '')
         .then((res: any) => {
             console.log(res);
             loading.value = false;
             // 跳转至 "/workbench"
             console.log('登录成功');
+            localStorage.setItem('username', name.value);
             router.push({name: 'workbench'});
         })
         .catch(error => {

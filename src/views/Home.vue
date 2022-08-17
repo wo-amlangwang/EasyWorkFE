@@ -22,7 +22,7 @@ const router = useRouter()
 if (router.currentRoute.value.fullPath === '/'){
     router.push('/login')
 } else {
-    EasyWorkAPI.getUserInfo()
+    EasyWorkAPI.user.getUserInfo()
     .then((res: any) => {
         router.push({ name: 'workbench' })
     })
@@ -34,6 +34,7 @@ if (router.currentRoute.value.fullPath === '/'){
 </script>
 <style>
 .rigth-content {
+    background-color: #7c7c7c2f;
     display: flex;
     min-height: 100vh;
     width: 100%;
@@ -71,79 +72,5 @@ nav a {
 
 :root {
     font-size: 15px;
-}
-
-@keyframes move {
-
-    /* 动画初始状态，和结束状态 */
-    0%,
-    100% {
-        /* 以屏幕长的一边计算，控制它们的大小 */
-        background-size:
-            130vmax 130vmax,
-            80vmax 80vmax,
-            90vmax 90vmax,
-            110vmax 110vmax,
-            90vmax 90vmax;
-
-        /* 设置位置 */
-        background-position:
-            -80Vmax -80vmax,
-            60Vmax -30vmax,
-            10Vmax 10vmax,
-            -30Vmax -10vmax,
-            50Vmax 50vmax;
-    }
-
-    25% {
-        background-size:
-            100vmax 100vmax,
-            90vmax 90vmax,
-            100vmax 100vmax,
-            90vmax 90vmax,
-            60vmax 60vmax;
-
-        /* 设置位置 */
-        background-position:
-            -60Vmax -60vmax,
-            50Vmax -40vmax,
-            0Vmax 10vmax,
-            -40Vmax -20vmax,
-            40Vmax 40vmax;
-    }
-
-    50% {
-        background-size:
-            90vmax 90vmax,
-            100vmax 100vmax,
-            80vmax 80vmax,
-            90vmax 90vmax,
-            60vmax 60vmax;
-
-        /* 设置位置 */
-        background-position:
-            -70Vmax -70vmax,
-            40Vmax -40vmax,
-            0Vmax 10vmax,
-            -50Vmax -30vmax,
-            30Vmax 30vmax;
-    }
-
-    75% {
-        background-size:
-            80vmax 80vmax,
-            70vmax 70vmax,
-            80vmax 80vmax,
-            70vmax 70vmax,
-            50vmax 50vmax;
-
-        /* 设置位置 */
-        background-position:
-            -60Vmax -60vmax,
-            60Vmax -30vmax,
-            10Vmax 10vmax,
-            -40Vmax -40vmax,
-            50Vmax 50vmax;
-    }
 }
 </style>

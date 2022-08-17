@@ -1,8 +1,8 @@
 <template>
-    <div :ref="drag" role="Item" :id="`item-${id}`" class="item">
-        <el-space>
+    <div :ref="drag" role="Item" :id="`item-${id}`" class="task-item">
+        <el-space class="title">
             <a>{{ title }}</a>
-            <a src="#">责任人：{{ person }}</a>
+            <a src="#">责任人：{{ person.join() }}</a>
         </el-space>
         <el-space>
             <a>💡</a>
@@ -20,25 +20,19 @@ interface DropResult {
     name: string
 }
 
-const props = defineProps<{ 
+const props = defineProps<{
     id: number,  // 事项ID
     title: string,  // 事项标题
-    person: string  // 事项负责人
+    person: string[],  // 事项负责人
+    end: (item: any, monitor: any) => void // 被拖放的回调函数
 }>()
 
 
 // 注册拖动相关的hook
-
 const [collect, drag] = useDrag(() => ({
     type: 'item',
-    item: () => ({
-        name: props.id,
-    }),
-    end: (item, monitor) => {
-        // 加入到目标组件的数据中
-        const dropResult = monitor.getDropResult() as DropResult
-
-    },
+    item: { name: props.id },
+    end: props.end,
     collect: monitor => ({
         isDragging: monitor.isDragging(),
         handlerId: monitor.getHandlerId(),
@@ -48,8 +42,8 @@ const [collect, drag] = useDrag(() => ({
 const { isDragging } = toRefs(collect)
 </script>
 
-<style lang="less" scoped>
-.item {
+<style>
+.task-item {
     background-color: #fff;
     width: 100%;
     cursor: move;
@@ -60,5 +54,11 @@ const { isDragging } = toRefs(collect)
     border-radius: 4px;
     margin-bottom: 10px;
     box-shadow: 1px 1px 12px rgba(0, 0, 0, 0.1);
+}
+
+.task-item .title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 </style>

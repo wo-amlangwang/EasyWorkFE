@@ -20,7 +20,7 @@ let loading: boolean;
 
 const signup = () => {
     loading = true;
-    EasyWorkAPI.signup(name.value, email.value, password.value)
+    EasyWorkAPI.user.signup(name.value, email.value, password.value)
         .then((res: any) => {
             loading = false;
             ElMessageBox.alert(res.message, '提示', {
